@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert 
 import { colors } from '@/constants/colors';
 import { BloodReport, LabValues, AnthropometricData } from '@/types/bloodReport';
 import { useBloodReports } from '@/providers/BloodReportProvider';
-import { AlertTriangle, Activity, TrendingUp, Save, X } from 'lucide-react-native';
+import { AlertTriangle, Save, X } from 'lucide-react-native';
 
 interface BloodReportFormProps {
   onClose: () => void;
@@ -20,22 +20,26 @@ interface RealTimeAlert {
 export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editingReport }) => {
   const { addReport, updateReport } = useBloodReports();
   
-  const [activeTab, setActiveTab] = useState<'basic' | 'nutrition' | 'advanced' | 'measurements'>('basic');
   const [date, setDate] = useState(editingReport?.date || new Date().toISOString().split('T')[0]);
-  const [patientType, setPatientType] = useState<'hemodialysis' | 'peritoneal' | 'ckd'>(editingReport?.patientType || 'hemodialysis');
+  const [patientType] = useState<'hemodialysis' | 'peritoneal' | 'ckd'>(editingReport?.patientType || 'hemodialysis');
   const [preHD, setPreHD] = useState<LabValues>(editingReport?.preHD || {});
-  const [postHD, setPostHD] = useState<LabValues>(editingReport?.postHD || {});
-  const [anthropometric, setAnthropometric] = useState<AnthropometricData>(editingReport?.anthropometric || {});
+  const [postHD] = useState<LabValues>(editingReport?.postHD || {});
+  const [anthropometric] = useState<AnthropometricData>(editingReport?.anthropometric || {});
   const [clinicalNotes, setClinicalNotes] = useState(editingReport?.clinicalNotes || '');
   const [realTimeAlert, setRealTimeAlert] = useState<RealTimeAlert | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updatePreHD = useCallback((field: keyof LabValues, value: string) => {
-    const numValue = value ? parseFloat(value) : undefined;
-    setPreHD(prev => ({ ...prev, [field]: numValue }));
+    // Handle decimal input properly
+    const numValue = value && value.trim() !== '' ? parseFloat(value) : undefined;
+    
+    // Only update if the value is valid or empty
+    if (value === '' || (!isNaN(numValue!) && numValue !== undefined)) {
+      setPreHD(prev => ({ ...prev, [field]: numValue }));
+    }
 
     // Real-time critical value detection
-    if (field === 'potassium' && numValue) {
+    if (field === 'potassium' && numValue && !isNaN(numValue)) {
       if (numValue > 6.0) {
         setRealTimeAlert({
           type: 'critical',
@@ -50,7 +54,7 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
           parameter: 'potassium',
           value: numValue
         });
-      } else if (numValue > 5.5 || numValue < 3.5) {
+      } else if (numValue > 5.0 || numValue < 3.5) {
         setRealTimeAlert({
           type: 'warning',
           message: `WARNING: Potassium ${numValue} is outside normal range (3.5-5.0)`,
@@ -60,6 +64,40 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
       } else {
         setRealTimeAlert(null);
       }
+    } else if (field === 'phosphorus' && numValue && !isNaN(numValue)) {
+      if (numValue > 7.0) {
+        setRealTimeAlert({
+          type: 'critical',
+          message: 'CRITICAL: Phosphorus >7.0 - Severe bone disease risk',
+          parameter: 'phosphorus',
+          value: numValue
+        });
+      } else if (numValue > 5.5 || numValue < 3.5) {
+        setRealTimeAlert({
+          type: 'warning',
+          message: `WARNING: Phosphorus ${numValue} is outside normal range (3.5-5.5)`,
+          parameter: 'phosphorus',
+          value: numValue
+        });
+      }
+    } else if (field === 'albumin' && numValue && !isNaN(numValue)) {
+      if (numValue < 3.0) {
+        setRealTimeAlert({
+          type: 'critical',
+          message: 'CRITICAL: Albumin <3.0 - Severe malnutrition risk',
+          parameter: 'albumin',
+          value: numValue
+        });
+      } else if (numValue < 3.5) {
+        setRealTimeAlert({
+          type: 'warning',
+          message: `WARNING: Albumin ${numValue} is below normal (3.5-5.0)`,
+          parameter: 'albumin',
+          value: numValue
+        });
+      }
+    } else if (field !== 'potassium' && field !== 'phosphorus' && field !== 'albumin') {
+      setRealTimeAlert(null);
     }
   }, []);
 
@@ -117,7 +155,8 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
           value={preHD[field]?.toString() || ''}
           onChangeText={(value) => updatePreHD(field, value)}
           placeholder="0.0"
-          keyboardType="numeric"
+          keyboardType="decimal-pad"
+          returnKeyType="next"
         />
         <Text style={styles.unit}>{unit}</Text>
       </View>
@@ -168,14 +207,17 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.tabContent}>
           <Text style={styles.sectionTitle}>Essential Dialysis Monitoring</Text>
-          {renderLabInput('Blood Urea', 'urea', 'mg/dL', '15-45')}
-          {renderLabInput('Creatinine', 'creatinine', 'mg/dL', '8-12')}
+          {renderLabInput('Blood Urea', 'urea', 'mg/dL', '20-60 (pre-dialysis)')}
+          {renderLabInput('Creatinine', 'creatinine', 'mg/dL', '8-12 (pre-dialysis)')}
           {renderLabInput('Potassium ⚠️', 'potassium', 'mEq/L', '3.5-5.0')}
           {renderLabInput('Sodium', 'sodium', 'mEq/L', '136-145')}
           {renderLabInput('Calcium', 'calcium', 'mg/dL', '8.5-10.5')}
           {renderLabInput('Phosphorus', 'phosphorus', 'mg/dL', '3.5-5.5')}
           {renderLabInput('Albumin', 'albumin', 'g/dL', '3.5-5.0')}
           {renderLabInput('Hemoglobin', 'hemoglobin', 'g/dL', '11-12')}
+          {renderLabInput('iPTH', 'iPTH', 'pg/mL', '150-300')}
+          {renderLabInput('TSAT', 'tsat', '%', '20-50')}
+          {renderLabInput('Ferritin', 'serumFerritin', 'ng/mL', '200-500')}
         </View>
 
         <View style={styles.notesSection}>
