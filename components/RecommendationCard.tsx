@@ -67,7 +67,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
   };
   
   const handleFoodPress = (foodId: string) => {
-    router.push({ pathname: '/food-details', params: { id: foodId } } as any);
+    router.push({ pathname: '/food-details', params: { foodId } } as any);
   };
   
   const title = language === 'en' ? recommendation.title.en : recommendation.title.ne;
