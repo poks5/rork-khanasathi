@@ -480,6 +480,127 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
     );
 
+    // Achar Safety: Pickle Use in CKD & Dialysis Patients – 5 tips
+    recommendations.push(
+      {
+        id: 'achar-safe-daily-use',
+        category: 'mineral-management',
+        title: {
+          en: 'Safe Achar Choices for Daily Use',
+          ne: 'दैनिक प्रयोगका लागि सुरक्षित अचार विकल्प'
+        },
+        description: {
+          en: 'Choose fresh herb-based achars like coriander and mint made with minimal salt. Limit portions to 1–2 teaspoons per meal.',
+          ne: 'धनिया, पुदिनाजस्ता जडीबुटीबाट बनेका अचार कम नुनमा तयार गरी रोज्नुहोस्। प्रत्येक भोजनमा १–२ चम्चा मात्र।'
+        },
+        priority: 'high',
+        suggestedFoods: ['coriander', 'turmeric', 'achar-mixed'],
+        avoidFoods: ['gundruk'],
+        cookingTips: [
+          { en: 'Use minimal salt when preparing achars.', ne: 'अचार बनाउन नुन कम प्रयोग गर्नुहोस्।' },
+          { en: 'Prefer fresh (non‑fermented) preparations.', ne: 'ताजा (अफर्मेन्टेड) अचार प्राथमिकता दिनुहोस्।' },
+          { en: 'Limit to 1 tsp per meal.', ne: 'प्रत्येक भोजनमा १ चम्चा सीमित गर्नुहोस्।' },
+          { en: 'Rinse high‑sodium commercial pickles before eating.', ne: 'उच्च नुन भएका वाणिज्यिक अचार खानुअघि पानीले धुनुहोस्।' }
+        ],
+        educationalContent: [
+          { en: 'Renal Nutrition Guidelines 2021: Prefer low‑sodium, fresh herb condiments.', ne: 'Renal Nutrition Guidelines 2021: कम नुन र ताजा जडीबुटीका अचार प्राथमिकता दिनुहोस्।' }
+        ]
+      },
+      {
+        id: 'achar-high-risk-avoid',
+        category: 'mineral-management',
+        title: {
+          en: 'High‑Risk Achars to Completely Avoid',
+          ne: 'पुरै बच्नुपर्ने उच्च जोखिम अचार'
+        },
+        description: {
+          en: 'Avoid tomato achar, potato pickle, and gundruk achar due to very high potassium and sodium.',
+          ne: 'धेरै उच्च पोटासियम र सोडियमका कारण गोलभेडा अचार, आलु अचार र गुन्द्रुक अचारबाट जोगिनुहोस्।'
+        },
+        priority: 'high',
+        avoidFoods: ['tomato', 'potato', 'gundruk', 'achar-mixed'],
+        cookingTips: [
+          { en: 'No safe preparation method for these items.', ne: 'यीका लागि सुरक्षित तयारी विधि छैन।' },
+          { en: 'Replace with herb‑based alternatives.', ne: 'जडीबुटीआधारित विकल्प प्रयोग गर्नुहोस्।' },
+          { en: 'Educate family about risks.', ne: 'जोखिमबारे परिवारलाई बुझाउनुहोस्।' }
+        ],
+        educationalContent: [
+          { en: 'KDOQI Clinical Guidelines: Restrict high‑potassium and high‑sodium pickled vegetables.', ne: 'KDOQI क्लिनिकल दिशानिर्देश: उच्च पोटासियम/सोडियम भएका अचार कडाइका साथ सीमित गर्नुहोस्।' }
+        ]
+      },
+      {
+        id: 'achar-portion-prep',
+        category: 'mineral-management',
+        title: {
+          en: 'Portion Control and Preparation Methods',
+          ne: 'मात्रा नियन्त्रण र तयारी विधि'
+        },
+        description: {
+          en: 'Even safe achars must be strictly portioned. Use ≤1 teaspoon per meal. Rinse commercial achars to reduce sodium.',
+          ne: 'सुरक्षित अचार पनि कडाइका साथ मात्रा नियन्त्रण गर्नुहोस्। प्रत्येक भोजनमा अधिकतम १ चम्चा। वाणिज्यिक अचार नुन कम गर्न धुनुहोस्।'
+        },
+        priority: 'high',
+        suggestedFoods: ['achar-mixed'],
+        avoidFoods: [],
+        cookingTips: [
+          { en: 'Measure portions with a teaspoon.', ne: 'टिस्पूनले मात्रा नाप्नुहोस्।' },
+          { en: 'Rinse before eating.', ne: 'खानुअघि पानीले धुनुहोस्।' },
+          { en: 'Make fresh, low‑salt weekly batches.', ne: 'प्रत्येक हप्ता ताजा र कम नुनयुक्त अचार बनाउनुहोस्।' },
+          { en: 'Use herbs instead of excess salt.', ne: 'अधिक नुनको सट्टा जडीबुटी प्रयोग गर्नुहोस्।' }
+        ],
+        educationalContent: [
+          { en: 'Portion Control Guidelines for CKD: Keep condiments minimal.', ne: 'CKD मात्रा नियन्त्रण दिशानिर्देश: मसला/अचार न्यून राख्नुहोस्।' }
+        ]
+      },
+      {
+        id: 'achar-festival-mods',
+        category: 'mineral-management',
+        title: {
+          en: 'Traditional Festival Food Modifications',
+          ne: 'चाडपर्वका खानामा सुरक्षित परिमार्जन'
+        },
+        description: {
+          en: 'During festivals, replace high‑salt achars with fresh herb chutneys or homemade low‑salt options to keep traditions kidney‑safe.',
+          ne: 'चाडपर्वमा उच्च नुनयुक्त अचारको ठाउँमा ताजा जडीबुटी चटनी वा घरमै बनेका कम नुन विकल्प प्रयोग गरी परम्परा सुरक्षित राख्नुहोस्।'
+        },
+        priority: 'medium',
+        suggestedFoods: ['coriander', 'turmeric'],
+        avoidFoods: ['achar-mixed'],
+        cookingTips: [
+          { en: 'Plan safe alternatives for gatherings.', ne: 'भेला/कार्यक्रमका लागि सुरक्षित विकल्प योजना बनाउनुहोस्।' },
+          { en: 'Teach family safe preparation.', ne: 'परिवारलाई सुरक्षित तयारी सिकाउनुहोस्।' },
+          { en: 'Build new traditions with herb‑forward flavors.', ne: 'जडीबुटीको स्वादमुखी नयाँ परम्परा बनाउनुहोस्।' }
+        ],
+        educationalContent: [
+          { en: 'Cultural Adaptation Guidelines: Maintain culture while meeting renal safety.', ne: 'सांस्कृतिक अनुकूलन दिशानिर्देश: किड्नी सुरक्षा कायम राख्दै संस्कृति जोगाउनुहोस्।' }
+        ]
+      },
+      {
+        id: 'achar-risk-factors',
+        category: 'mineral-management',
+        title: {
+          en: 'Understanding Achar Risk Factors',
+          ne: 'अचारका जोखिम कारक बुझ्ने'
+        },
+        description: {
+          en: 'Fermentation raises potassium availability; excess salt drives fluid retention; high‑potassium bases (e.g., tomato) can be dangerous.',
+          ne: 'फर्मेन्टेसनले पोटासियमको उपलब्धता बढाउँछ; बढी नुनले तरल जमाउने गर्दछ; गोलभेडाजस्ता उच्च पोटासियम आधार खतरनाक हुन सक्छ।'
+        },
+        priority: 'medium',
+        suggestedFoods: ['coriander'],
+        avoidFoods: ['tomato', 'gundruk'],
+        cookingTips: [
+          { en: 'Read labels for sodium and “phos‑” additives.', ne: 'लेबलमा सोडियम र “phos‑” एडिटिभ जाँच्नुहोस्।' },
+          { en: 'Ask about preparation methods when eating out.', ne: 'बाहिर खाँदा तयारी विधि सोध्नुहोस्।' },
+          { en: 'Choose fresh over fermented.', ne: 'फर्मेन्टेडको सट्टा ताजा रोज्नुहोस्।' },
+          { en: 'Monitor labs regularly with your care team.', ne: 'हेरचाह टोलीसँग मिलेर नियमित ल्याब निगरानी गर्नुहोस्।' }
+        ],
+        educationalContent: [
+          { en: 'Patient education: Sodium increases thirst and interdialytic weight gain.', ne: 'रोगी शिक्षा: सोडियमले तिर्खा र डायलिसिसबीचको तौल बढाउँछ।' }
+        ]
+      }
+    );
+
     return recommendations;
   }, [profile, todayIntake, isLoading]);
 
