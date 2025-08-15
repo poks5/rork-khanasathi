@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import { NutritionProvider } from "@/providers/NutritionProvider";
 import { UserProfileProvider } from "@/providers/UserProfileProvider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -44,7 +45,9 @@ export default function RootLayout() {
         <LanguageProvider>
           <UserProfileProvider>
             <NutritionProvider>
-              <RootLayoutNav />
+              <ErrorBoundary>
+                <RootLayoutNav />
+              </ErrorBoundary>
             </NutritionProvider>
           </UserProfileProvider>
         </LanguageProvider>

@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Book, User, Calendar } from "lucide-react-native";
+import { Home, Book, User, Calendar, Lightbulb } from "lucide-react-native";
 import React from "react";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { colors } from "@/constants/colors";
@@ -42,6 +42,13 @@ export default function TabLayout() {
         options={{
           title: t('tabs.log'),
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="insights"
+        options={{
+          title: t('tabs.insights') ?? 'Insights',
+          tabBarIcon: ({ color }) => <Lightbulb size={24} color={color} />,
         }}
       />
       <Tabs.Screen
