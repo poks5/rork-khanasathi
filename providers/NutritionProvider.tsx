@@ -410,6 +410,76 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
     );
 
+    // Fluid Overload Management – 4 tips
+    recommendations.push(
+      {
+        id: 'hidden-fluid-sources',
+        category: 'fluid-balance',
+        title: {
+          en: 'Hidden Fluid Sources to Avoid',
+          ne: 'लुकेका तरल स्रोतहरूबाट जोगिनुहोस्'
+        },
+        description: {
+          en: 'Avoid soups, watery dal, juicy fruits, ice cream, yogurt drinks, and fruit juices. These add significant fluid.',
+          ne: 'सूप, पानी धेरै भएको दाल, रसिला फलफूल, आइसक्रिम, दहीका पेय, र जुसबाट बच्नुहोस्। यीले धेरै तरल थप्छन्।'
+        },
+        priority: 'high',
+        avoidFoods: ['soups', 'dal-masoor', 'watermelon', 'ice-cream', 'lassi', 'fruit-juices', 'milk-whole', 'yogurt-plain']
+      },
+      {
+        id: 'dry-snack-alternatives',
+        category: 'fluid-balance',
+        title: {
+          en: 'Dry Snack Alternatives',
+          ne: 'सुक्खा खाजाका विकल्प'
+        },
+        description: {
+          en: 'Choose plain biscuits, roasted rice (भुजा), and small amounts of dry foods to reduce fluid intake.',
+          ne: 'सादा बिस्कुट, भुजा, र थोरै सुक्खा खाद्य पदार्थ रोज्नुहोस् ताकि तरल सेवन कम होस्।'
+        },
+        priority: 'medium',
+        suggestedFoods: ['plain-biscuits', 'roasted-rice-bhuja', 'dry-bread', 'rice-cakes', 'white-bread'],
+        educationalContent: [{
+          en: 'Fluid Restriction Guidelines: Prefer low-moisture foods to control daily fluid allowance.',
+          ne: 'तरल नियन्त्रण दिशानिर्देश: दैनिक तरल सीमालाई नियन्त्रण गर्न कम चिस्यान भएका खाद्य पदार्थ प्राथमिकता दिनुहोस्।'
+        }]
+      },
+      {
+        id: 'thirst-management-techniques',
+        category: 'fluid-balance',
+        title: {
+          en: 'Thirst Management Techniques',
+          ne: 'तिर्खा व्यवस्थापन गर्ने तरिका'
+        },
+        description: {
+          en: 'Use ice chips, sugar-free gum, or lemon wedges. Rinse your mouth without swallowing and track all fluid intake.',
+          ne: 'आइस चिप्स, सुगर-फ्रि गम, वा कागतीका साना टुक्रा प्रयोग गर्नुहोस्। ननिगाली मुख कुल्ला गर्नुहोस् र सबै तरल सेवन ट्र्याक गर्नुहोस्।'
+        },
+        priority: 'high',
+        educationalContent: [{
+          en: 'Patient Education Materials: Spacing sips and using oral care can reduce thirst sensation.',
+          ne: 'रोगी शिक्षा सामग्री: साना साना घुट्का र मुखको हेरचाहले तिर्खा कम महसुस हुन्छ।'
+        }]
+      },
+      {
+        id: 'cooking-methods-reduce-fluid',
+        category: 'fluid-balance',
+        title: {
+          en: 'Cooking Methods to Reduce Fluid',
+          ne: 'तरल कम गर्ने पकाउने तरिका'
+        },
+        description: {
+          en: 'Steam vegetables, grill or roast meats, make thick dal, and drain excess liquid from cooked foods.',
+          ne: 'तरकारी भापमा पकाउनुहोस्, मासु ग्रिल/रोस्ट गर्नुहोस्, बाक्लो दाल बनाउनुहोस्, र पकाएको खाना बाट अतिरिक्त तरल फाल्नुहोस्।'
+        },
+        priority: 'medium',
+        cookingTips: [
+          { en: 'Steam instead of boil when possible.', ne: 'सम्भव भए उमाल्ने सट्टा भापमा पकाउनुहोस्।' },
+          { en: 'Reduce added water and simmer to desired thickness.', ne: 'थपिएको पानी कम गर्नुहोस् र आवश्यक बाक्लोपनासम्म सिमर गर्नुहोस्।' }
+        ]
+      }
+    );
+
     return recommendations;
   }, [profile, todayIntake, isLoading]);
 
