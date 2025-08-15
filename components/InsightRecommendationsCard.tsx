@@ -5,6 +5,16 @@ import { useInsights } from '@/providers/InsightsProvider';
 import { InsightRecommendation, RecommendationCategory, RecommendationPriority } from '@/types/food';
 import { useLanguage } from '@/providers/LanguageProvider';
 
+// Utility function to parse bilingual content
+const parseBilingualText = (text: string, language: 'en' | 'ne'): string => {
+  if (!text.includes(' | ')) {
+    return text; // Return as-is if no bilingual separator
+  }
+  
+  const [english, nepali] = text.split(' | ');
+  return language === 'en' ? english.trim() : nepali.trim();
+};
+
 interface InsightRecommendationsCardProps {
   showAddButton?: boolean;
   maxHeight?: number;
@@ -24,7 +34,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
     getFilteredRecommendations,
     addPredefinedInsights
   } = useInsights();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | undefined>();
@@ -115,10 +125,10 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
             <Text style={styles.categoryIcon}>{getCategoryIcon(recommendation.category)}</Text>
             <View style={styles.headerText}>
               <Text style={[styles.title, !recommendation.isRead && styles.unreadTitle]} numberOfLines={2}>
-                {recommendation.title}
+                {parseBilingualText(recommendation.title, language)}
               </Text>
               <Text style={styles.description} numberOfLines={isExpanded ? undefined : 2}>
-                {recommendation.description}
+                {parseBilingualText(recommendation.description, language)}
               </Text>
             </View>
           </View>
@@ -137,13 +147,13 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
             {recommendation.tips.map((tip, index) => (
               <View key={index} style={styles.tipCard}>
                 <View style={styles.tipHeader}>
-                  <Text style={styles.tipTitle}>{tip.title}</Text>
+                  <Text style={styles.tipTitle}>{parseBilingualText(tip.title, language)}</Text>
                   <View style={[styles.tipPriorityBadge, { backgroundColor: getPriorityColor(tip.priority) }]}>
                     <Text style={styles.tipPriorityText}>{tip.priority}</Text>
                   </View>
                 </View>
                 
-                <Text style={styles.tipContent}>{tip.content}</Text>
+                <Text style={styles.tipContent}>{parseBilingualText(tip.content, language)}</Text>
                 
                 {tip.foods && (
                   <View style={styles.foodsSection}>
@@ -151,7 +161,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                       <View style={styles.foodCategory}>
                         <Text style={styles.foodCategoryTitle}>✅ {t('insights.recommendedLabel')}:</Text>
                         {tip.foods.recommended.map((food, foodIndex) => (
-                          <Text key={foodIndex} style={styles.foodItem}>• {food}</Text>
+                          <Text key={foodIndex} style={styles.foodItem}>• {parseBilingualText(food, language)}</Text>
                         ))}
                       </View>
                     )}
@@ -160,7 +170,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                       <View style={styles.foodCategory}>
                         <Text style={styles.foodCategoryTitle}>❌ {t('insights.avoidLabel')}:</Text>
                         {tip.foods.avoid.map((food, foodIndex) => (
-                          <Text key={foodIndex} style={styles.foodItem}>• {food}</Text>
+                          <Text key={foodIndex} style={styles.foodItem}>• {parseBilingualText(food, language)}</Text>
                         ))}
                       </View>
                     )}
@@ -171,7 +181,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                   <View style={styles.cookingTipsSection}>
                     <Text style={styles.cookingTipsTitle}>👨‍🍳 {t('insights.cookingTipsLabel')}:</Text>
                     {tip.cookingTips.map((cookingTip, cookingIndex) => (
-                      <Text key={cookingIndex} style={styles.cookingTip}>• {cookingTip}</Text>
+                      <Text key={cookingIndex} style={styles.cookingTip}>• {parseBilingualText(cookingTip, language)}</Text>
                     ))}
                   </View>
                 )}
@@ -179,7 +189,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                 {tip.evidence && (
                   <View style={styles.evidenceSection}>
                     <Text style={styles.evidenceTitle}>📚 {t('insights.evidenceLabel')}:</Text>
-                    <Text style={styles.evidenceText}>{tip.evidence}</Text>
+                    <Text style={styles.evidenceText}>{parseBilingualText(tip.evidence, language)}</Text>
                   </View>
                 )}
               </View>
@@ -210,7 +220,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
             </View>
 
             <Text style={styles.dateAdded}>
-              Added: {new Date(recommendation.dateAdded).toLocaleDateString()}
+              {t('insights.added')}: {new Date(recommendation.dateAdded).toLocaleDateString()}
             </Text>
           </View>
         )}

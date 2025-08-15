@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { InsightRecommendation, NutritionRecommendation, RecommendationCategory, RecommendationPriority } from '@/types/food';
 
-const STORAGE_KEY = 'insightRecommendations_v2';
+const STORAGE_KEY = 'insightRecommendations_v3_bilingual';
 
 export const [InsightsProvider, useInsights] = createContextHook(() => {
   const [recommendations, setRecommendations] = useState<InsightRecommendation[]>([]);
@@ -13,40 +13,40 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
   const getPredefinedRecommendations = useCallback((): InsightRecommendation[] => {
     // Achar Safety: Pickle Use in CKD & Dialysis Patients
     const acharSafetyInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
-      title: 'Achar Safety: Pickle Use in CKD & Dialysis Patients',
-      description: 'Safe pickle consumption guidelines and traditional condiment modifications for kidney patients',
+      title: 'Achar Safety: Pickle Use in CKD & Dialysis Patients | अचार सुरक्षा: मृगौला र डायलिसिस बिरामीहरूमा अचारको प्रयोग',
+      description: 'Safe pickle consumption guidelines and traditional condiment modifications for kidney patients | मृगौला बिरामीहरूका लागि सुरक्षित अचार सेवन दिशानिर्देश र परम्परागत मसलाको परिमार्जन',
       category: 'safety-guidelines',
       priority: 'high',
       tips: [
         {
-          title: 'Safe Achar Choices for Daily Use',
-          content: 'Choose fresh herb-based achars like coriander (धनिया) and mint (पुदिना) pickles. These are naturally low in potassium and sodium when prepared with minimal salt. Limit portions to 1-2 teaspoons per meal.',
+          title: 'Safe Achar Choices for Daily Use | दैनिक प्रयोगका लागि सुरक्षित अचार छनोट',
+          content: 'Choose fresh herb-based achars like coriander (धनिया) and mint (पुदिना) pickles. These are naturally low in potassium and sodium when prepared with minimal salt. Limit portions to 1-2 teaspoons per meal. | ताजा जडिबुटीमा आधारित अचारहरू जस्तै धनिया र पुदिनाको अचार छान्नुहोस्। यी प्राकृतिक रूपमा कम पोटासियम र सोडियम हुन्छन् जब न्यूनतम नुनसँग तयार गरिन्छ। प्रति खानामा १-२ चम्चा मात्र सीमित गर्नुहोस्।',
           foods: {
             recommended: ['Coriander achar (धनिया अचार)', 'Mint achar (पुदिना अचार)', 'Fresh ginger pickle (अदुवा अचार)'],
-            avoid: ['Fermented achars', 'Commercial pickles', 'High-sodium preparations']
+            avoid: ['Fermented achars (किण्वित अचार)', 'Commercial pickles (व्यावसायिक अचार)', 'High-sodium preparations (उच्च सोडियम तयारी)']
           },
           cookingTips: [
-            'Use minimal salt in preparation',
-            'Choose fresh over fermented',
-            'Limit to 1 tsp per meal',
-            'Rinse high-sodium achars before eating'
+            'Use minimal salt in preparation | तयारीमा न्यूनतम नुन प्रयोग गर्नुहोस्',
+            'Choose fresh over fermented | किण्वित भन्दा ताजा छान्नुहोस्',
+            'Limit to 1 tsp per meal | प्रति खानामा १ चम्चा मात्र सीमित गर्नुहोस्',
+            'Rinse high-sodium achars before eating | खानु अघि उच्च सोडियम अचार पानीले धुनुहोस्'
           ],
           priority: 'high',
-          evidence: 'Renal Nutrition Guidelines 2021'
+          evidence: 'Renal Nutrition Guidelines 2021 | मृगौला पोषण दिशानिर्देश २०२१'
         },
         {
-          title: 'High-Risk Achars to Completely Avoid',
-          content: 'Completely avoid tomato achar (गोलभेडा अचार), potato pickle (आलु अचार), and gundruk achar (गुन्द्रुक अचार). These contain extremely high levels of potassium and sodium that can be dangerous for kidney patients.',
+          title: 'High-Risk Achars to Completely Avoid | पूर्ण रूपमा बच्नुपर्ने उच्च जोखिमका अचारहरू',
+          content: 'Completely avoid tomato achar (गोलभेडा अचार), potato pickle (आलु अचार), and gundruk achar (गुन्द्रुक अचार). These contain extremely high levels of potassium and sodium that can be dangerous for kidney patients. | गोलभेडा अचार, आलु अचार, र गुन्द्रुक अचार पूर्ण रूपमा बच्नुहोस्। यिनमा अत्यधिक मात्रामा पोटासियम र सोडियम हुन्छ जुन मृगौला बिरामीहरूका लागि खतरनाक हुन सक्छ।',
           foods: {
             avoid: ['Tomato achar (गोलभेडा अचार)', 'Potato pickle (आलु अचार)', 'Gundruk achar (गुन्द्रुक अचार)', 'Fermented radish (मुला अचार)']
           },
           cookingTips: [
-            'No safe preparation method exists for these',
-            'Replace with herb-based alternatives',
-            'Educate family members about risks'
+            'No safe preparation method exists for these | यिनका लागि कुनै सुरक्षित तयारी विधि छैन',
+            'Replace with herb-based alternatives | जडिबुटी आधारित विकल्पहरूसँग बदल्नुहोस्',
+            'Educate family members about risks | परिवारका सदस्यहरूलाई जोखिमबारे शिक्षा दिनुहोस्'
           ],
           priority: 'high',
-          evidence: 'KDOQI Clinical Guidelines'
+          evidence: 'KDOQI Clinical Guidelines | KDOQI क्लिनिकल दिशानिर्देशहरू'
         },
         {
           title: 'Portion Control and Preparation Methods',
@@ -101,8 +101,8 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
 
     // Kidney-Safe Protein Sources
     const proteinSafetyInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
-      title: 'Kidney-Safe Protein Sources (Low PO₄ & Low K)',
-      description: 'High-quality protein options that are low in both phosphorus and potassium',
+      title: 'Kidney-Safe Protein Sources (Low PO₄ & Low K) | मृगौला-सुरक्षित प्रोटिन स्रोतहरू (कम फस्फोरस र पोटासियम)',
+      description: 'High-quality protein options that are low in both phosphorus and potassium | उच्च गुणस्तरका प्रोटिन विकल्पहरू जुन फस्फोरस र पोटासियम दुवैमा कम छन्',
       category: 'protein-optimization',
       priority: 'high',
       tips: [
