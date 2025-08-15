@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert 
 import { BookmarkIcon, EyeOffIcon, TrashIcon, PlusIcon, FilterIcon, SearchIcon } from 'lucide-react-native';
 import { useInsights } from '@/providers/InsightsProvider';
 import { InsightRecommendation, RecommendationCategory, RecommendationPriority } from '@/types/food';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 interface InsightRecommendationsCardProps {
   showAddButton?: boolean;
@@ -23,6 +24,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
     getFilteredRecommendations,
     addPredefinedInsights
   } = useInsights();
+  const { t } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | undefined>();
@@ -65,15 +67,15 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
 
   const handleAddPredefinedInsights = () => {
     Alert.alert(
-      'Add Sample Insights',
-      'This will add sample recommendations about Achar Safety and Protein Sources. Continue?',
+      t('insights.confirmAddTitle'),
+      t('insights.confirmAddMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: 'Add', 
+          text: t('common.add'), 
           onPress: () => {
             addPredefinedInsights();
-            Alert.alert('Success', 'Sample insights have been added!');
+            Alert.alert(t('insights.successAddTitle'), t('insights.successAddMessage'));
           }
         }
       ]
@@ -82,12 +84,12 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
 
   const handleDeleteRecommendation = (id: string, title: string) => {
     Alert.alert(
-      'Delete Recommendation',
-      `Are you sure you want to delete "${title}"?`,
+      t('insights.deleteConfirmTitle'),
+      `${t('insights.deleteConfirmMessage')} "${title}"?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: 'Delete', 
+          text: t('insights.delete'), 
           style: 'destructive',
           onPress: () => deleteRecommendation(id)
         }
@@ -112,7 +114,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
           <View style={styles.headerLeftContent}>
             <Text style={styles.categoryIcon}>{getCategoryIcon(recommendation.category)}</Text>
             <View style={styles.headerText}>
-              <Text style={[styles.title, !recommendation.isRead && styles.unreadTitle]}>
+              <Text style={[styles.title, !recommendation.isRead && styles.unreadTitle]} numberOfLines={2}>
                 {recommendation.title}
               </Text>
               <Text style={styles.description} numberOfLines={isExpanded ? undefined : 2}>
@@ -130,7 +132,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
 
         {isExpanded && (
           <View style={styles.expandedContent}>
-            <Text style={styles.tipsHeader}>Tips ({recommendation.tips.length})</Text>
+            <Text style={styles.tipsHeader}>{t('insights.tips')} ({recommendation.tips.length})</Text>
             
             {recommendation.tips.map((tip, index) => (
               <View key={index} style={styles.tipCard}>
@@ -147,7 +149,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                   <View style={styles.foodsSection}>
                     {tip.foods.recommended && tip.foods.recommended.length > 0 && (
                       <View style={styles.foodCategory}>
-                        <Text style={styles.foodCategoryTitle}>✅ Recommended:</Text>
+                        <Text style={styles.foodCategoryTitle}>✅ {t('insights.recommendedLabel')}:</Text>
                         {tip.foods.recommended.map((food, foodIndex) => (
                           <Text key={foodIndex} style={styles.foodItem}>• {food}</Text>
                         ))}
@@ -156,7 +158,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                     
                     {tip.foods.avoid && tip.foods.avoid.length > 0 && (
                       <View style={styles.foodCategory}>
-                        <Text style={styles.foodCategoryTitle}>❌ Avoid:</Text>
+                        <Text style={styles.foodCategoryTitle}>❌ {t('insights.avoidLabel')}:</Text>
                         {tip.foods.avoid.map((food, foodIndex) => (
                           <Text key={foodIndex} style={styles.foodItem}>• {food}</Text>
                         ))}
@@ -167,7 +169,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                 
                 {tip.cookingTips && tip.cookingTips.length > 0 && (
                   <View style={styles.cookingTipsSection}>
-                    <Text style={styles.cookingTipsTitle}>👨‍🍳 Cooking Tips:</Text>
+                    <Text style={styles.cookingTipsTitle}>👨‍🍳 {t('insights.cookingTipsLabel')}:</Text>
                     {tip.cookingTips.map((cookingTip, cookingIndex) => (
                       <Text key={cookingIndex} style={styles.cookingTip}>• {cookingTip}</Text>
                     ))}
@@ -176,7 +178,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                 
                 {tip.evidence && (
                   <View style={styles.evidenceSection}>
-                    <Text style={styles.evidenceTitle}>📚 Evidence:</Text>
+                    <Text style={styles.evidenceTitle}>📚 {t('insights.evidenceLabel')}:</Text>
                     <Text style={styles.evidenceText}>{tip.evidence}</Text>
                   </View>
                 )}
@@ -193,8 +195,8 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                   color={recommendation.isBookmarked ? '#ffffff' : '#6b7280'} 
                   fill={recommendation.isBookmarked ? '#ffffff' : 'none'}
                 />
-                <Text style={[styles.actionButtonText, recommendation.isBookmarked && styles.bookmarkedButtonText]}>
-                  {recommendation.isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                <Text style={[styles.actionButtonText, recommendation.isBookmarked && styles.bookmarkedButtonText]} numberOfLines={1}>
+                  {recommendation.isBookmarked ? t('insights.bookmarkedLabel') : t('insights.bookmark')}
                 </Text>
               </TouchableOpacity>
 
@@ -203,7 +205,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                 style={[styles.actionButton, styles.deleteButton]}
               >
                 <TrashIcon size={16} color="#dc2626" />
-                <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
+                <Text style={[styles.actionButtonText, styles.deleteButtonText]}>{t('insights.delete')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -220,10 +222,10 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Insights & Recommendations</Text>
+          <Text style={styles.headerTitle}>{t('insights.headerTitle')}</Text>
           <View style={styles.statsContainer}>
             <Text style={styles.statsText}>
-              {stats.total} total • {stats.unread} unread • {stats.bookmarked} bookmarked
+              {stats.total} {t('insights.stats.total')} • {stats.unread} {t('insights.stats.unread')} • {stats.bookmarked} {t('insights.stats.bookmarked')}
             </Text>
           </View>
         </View>
@@ -253,7 +255,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
             <SearchIcon size={16} color="#6b7280" />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search recommendations..."
+              placeholder={t('insights.searchPlaceholder')}
               value={searchTerm}
               onChangeText={setSearchTerm}
             />
@@ -266,7 +268,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
             >
               <EyeOffIcon size={14} color={showUnreadOnly ? '#ffffff' : '#6b7280'} />
               <Text style={[styles.filterTagText, showUnreadOnly && styles.activeFilterTagText]}>
-                Unread Only
+                {t('insights.unreadOnly')}
               </Text>
             </TouchableOpacity>
             
@@ -276,7 +278,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
             >
               <BookmarkIcon size={14} color={showBookmarkedOnly ? '#ffffff' : '#6b7280'} />
               <Text style={[styles.filterTagText, showBookmarkedOnly && styles.activeFilterTagText]}>
-                Bookmarked
+                {t('insights.bookmarked')}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -286,11 +288,11 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
       <ScrollView style={[styles.recommendationsList, { maxHeight }]} showsVerticalScrollIndicator={false}>
         {filteredRecommendations.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateTitle}>No recommendations found</Text>
+            <Text style={styles.emptyStateTitle}>{t('insights.emptyTitle')}</Text>
             <Text style={styles.emptyStateText}>
               {recommendations.length === 0 
-                ? 'Add some insights to get started!' 
-                : 'Try adjusting your filters or search term.'
+                ? t('insights.emptyNoData') 
+                : t('insights.emptyAdjust')
               }
             </Text>
             {showAddButton && recommendations.length === 0 && (
@@ -298,7 +300,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
                 onPress={handleAddPredefinedInsights}
                 style={styles.emptyStateButton}
               >
-                <Text style={styles.emptyStateButtonText}>Add Sample Insights</Text>
+                <Text style={styles.emptyStateButtonText}>{t('insights.addSampleInsights')}</Text>
               </TouchableOpacity>
             )}
           </View>

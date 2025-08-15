@@ -12,7 +12,7 @@ interface RecommendationCardProps {
 }
 
 export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation }) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   
   const getCategoryIcon = (category: RecommendationCategory) => {
@@ -53,8 +53,10 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
     }
   };
   
-  const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
+  const getPriorityColor = (priority: 'high' | 'medium' | 'low' | 'critical') => {
     switch (priority) {
+      case 'critical':
+        return colors.danger;
       case 'high':
         return colors.danger;
       case 'medium':
@@ -87,7 +89,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
         <Text style={styles.description}>{description}</Text>
         
         <View style={styles.priorityContainer}>
-          <Text style={styles.priorityLabel}>Priority:</Text>
+          <Text style={styles.priorityLabel}>{t('recommendationCard.priority')}:</Text>
           <View 
             style={[styles.priorityBadge, { backgroundColor: getPriorityColor(recommendation.priority) }]}
           >
@@ -100,7 +102,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
           onPress={() => setExpanded(!expanded)}
         >
           <Text style={styles.expandText}>
-            {expanded ? 'Show Less' : 'Show More'}
+            {expanded ? t('recommendationCard.showLess') : t('recommendationCard.showMore')}
           </Text>
           {expanded ? 
             <ChevronUp size={16} color={colors.primary} /> : 
@@ -112,7 +114,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
           <View style={styles.expandedContent}>
             {recommendation.suggestedFoods && recommendation.suggestedFoods.length > 0 && (
               <View style={styles.foodSection}>
-                <Text style={styles.sectionTitle}>Recommended Foods</Text>
+                <Text style={styles.sectionTitle}>{t('recommendationCard.recommendedFoods')}</Text>
                 <View style={styles.foodGrid}>
                   {recommendation.suggestedFoods.map(foodId => {
                     const food = getFoodById(foodId);
@@ -140,7 +142,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
             
             {recommendation.avoidFoods && recommendation.avoidFoods.length > 0 && (
               <View style={styles.foodSection}>
-                <Text style={styles.sectionTitle}>Foods to Avoid</Text>
+                <Text style={styles.sectionTitle}>{t('recommendationCard.foodsToAvoid')}</Text>
                 <View style={styles.foodGrid}>
                   {recommendation.avoidFoods.map(foodId => {
                     const food = getFoodById(foodId);
@@ -168,7 +170,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
             
             {recommendation.educationalContent && recommendation.educationalContent.length > 0 && (
               <View style={styles.educationSection}>
-                <Text style={styles.sectionTitle}>Educational Information</Text>
+                <Text style={styles.sectionTitle}>{t('recommendationCard.educationalInfo')}</Text>
                 {recommendation.educationalContent.map((content, index) => (
                   <View key={index} style={styles.educationItem}>
                     <Info size={16} color={colors.primary} />
@@ -182,7 +184,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
             
             {recommendation.cookingTips && recommendation.cookingTips.length > 0 && (
               <View style={styles.educationSection}>
-                <Text style={styles.sectionTitle}>Cooking Tips</Text>
+                <Text style={styles.sectionTitle}>{t('recommendationCard.cookingTips')}</Text>
                 {recommendation.cookingTips.map((tip, index) => (
                   <View key={index} style={styles.educationItem}>
                     <Utensils size={16} color={colors.primary} />

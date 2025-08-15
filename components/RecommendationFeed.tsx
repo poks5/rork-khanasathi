@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNutrition } from '@/providers/NutritionProvider';
 import { RecommendationCard } from '@/components/RecommendationCard';
 import { colors } from '@/constants/colors';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function RecommendationFeed() {
   const { recommendations, isLoading } = useNutrition();
+  const { t } = useLanguage();
 
   const sorted = useMemo(() => {
     const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -15,7 +17,7 @@ export default function RecommendationFeed() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <Text style={styles.loading}>Loading recommendations...</Text>
+        <Text style={styles.loading}>{t('recommendationFeed.loading')}</Text>
       </View>
     );
   }
@@ -23,7 +25,7 @@ export default function RecommendationFeed() {
   if (sorted.length === 0) {
     return (
       <View style={styles.center}>
-        <Text style={styles.empty}>No recommendations yet. Log foods to get personalized suggestions.</Text>
+        <Text style={styles.empty}>{t('recommendationFeed.empty')}</Text>
       </View>
     );
   }
