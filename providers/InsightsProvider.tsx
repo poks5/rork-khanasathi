@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { InsightRecommendation, NutritionRecommendation, RecommendationCategory, RecommendationPriority } from '@/types/food';
 
-const STORAGE_KEY = 'insightRecommendations';
+const STORAGE_KEY = 'insightRecommendations_v2';
 
 export const [InsightsProvider, useInsights] = createContextHook(() => {
   const [recommendations, setRecommendations] = useState<InsightRecommendation[]>([]);
