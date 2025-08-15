@@ -1,2 +1,370 @@
-import React from "react";
-import React, { useState } from 'react';\nimport { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';\nimport { colors } from '@/constants/colors';\nimport { useBloodReports } from '@/providers/BloodReportProvider';\nimport { BloodReportForm } from './BloodReportForm';\nimport { Plus, AlertTriangle, TrendingUp, Activity, FileText } from 'lucide-react-native';\n\nexport const LabDashboard: React.FC = () => {\n  const { reports, latestReport, criticalAlerts, recommendationsByPriority, isLoading } = useBloodReports();\n  const [showForm, setShowForm] = useState(false);\n\n  if (isLoading) {\n    return (\n      <View style={styles.loadingContainer}>\n        <Text style={styles.loadingText}>Loading lab reports...</Text>\n      </View>\n    );\n  }\n\n  const renderCriticalAlert = (alert: any, index: number) => (\n    <View key={index} style={styles.criticalAlertCard}>\n      <View style={styles.alertHeader}>\n        <AlertTriangle size={20} color={colors.white} />\n        <Text style={styles.alertTitle}>{alert.parameter.toUpperCase()}</Text>\n        <Text style={styles.alertValue}>{alert.value}</Text>\n      </View>\n      <Text style={styles.alertExplanation}>{alert.explanation}</Text>\n      <Text style={styles.alertAction}>Action: {alert.clinicalSignificance}</Text>\n    </View>\n  );\n\n  const renderRecommendation = (rec: any, index: number) => (\n    <View key={index} style={styles.recommendationCard}>\n      <View style={styles.recHeader}>\n        <View style={[\n          styles.priorityBadge,\n          { backgroundColor: rec.priority === 'critical' ? colors.danger : rec.priority === 'high' ? colors.warning : colors.primary }\n        ]}>\n          <Text style={styles.priorityText}>{rec.priority.toUpperCase()}</Text>\n        </View>\n        <Text style={styles.recTitle}>{rec.title}</Text>\n      </View>\n      <Text style={styles.recDescription}>{rec.description}</Text>\n      {rec.foods && rec.foods.length > 0 && (\n        <View style={styles.foodsSection}>\n          <Text style={styles.foodsTitle}>Foods:</Text>\n          {rec.foods.map((food: string, idx: number) => (\n            <Text key={idx} style={styles.foodItem}>• {food}</Text>\n          ))}\n        </View>\n      )}\n      {rec.supplements && rec.supplements.length > 0 && (\n        <View style={styles.supplementsSection}>\n          <Text style={styles.supplementsTitle}>Supplements/Actions:</Text>\n          {rec.supplements.map((supp: string, idx: number) => (\n            <Text key={idx} style={styles.supplementItem}>• {supp}</Text>\n          ))}\n        </View>\n      )}\n      <Text style={styles.evidence}>Evidence: {rec.evidence}</Text>\n    </View>\n  );\n\n  const renderStatsCard = (title: string, value: string, subtitle: string, icon: React.ReactNode, color: string) => (\n    <View style={[styles.statsCard, { borderLeftColor: color }]}>\n      <View style={styles.statsHeader}>\n        {icon}\n        <Text style={styles.statsTitle}>{title}</Text>\n      </View>\n      <Text style={styles.statsValue}>{value}</Text>\n      <Text style={styles.statsSubtitle}>{subtitle}</Text>\n    </View>\n  );\n\n  return (\n    <View style={styles.container}>\n      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>\n        {/* Header Stats */}\n        <View style={styles.statsContainer}>\n          {renderStatsCard(\n            'Total Reports',\n            reports.length.toString(),\n            'Lab reports tracked',\n            <FileText size={20} color={colors.primary} />,\n            colors.primary\n          )}\n          {renderStatsCard(\n            'Critical Alerts',\n            criticalAlerts.length.toString(),\n            'Require attention',\n            <AlertTriangle size={20} color={colors.danger} />,\n            colors.danger\n          )}\n          {renderStatsCard(\n            'High Priority',\n            recommendationsByPriority.high.length.toString(),\n            'Recommendations',\n            <TrendingUp size={20} color={colors.warning} />,\n            colors.warning\n          )}\n        </View>\n\n        {/* Latest Report Summary */}\n        {latestReport && (\n          <View style={styles.latestReportCard}>\n            <Text style={styles.sectionTitle}>Latest Report - {latestReport.date}</Text>\n            <Text style={styles.riskLevel}>\n              Risk Level: <Text style={[\n                styles.riskValue,\n                { color: latestReport.analysis?.overallRisk === 'high' ? colors.danger : \n                         latestReport.analysis?.overallRisk === 'moderate' ? colors.warning : colors.success }\n              ]}>\n                {latestReport.analysis?.overallRisk?.toUpperCase() || 'UNKNOWN'}\n              </Text>\n            </Text>\n            <Text style={styles.summary}>{latestReport.analysis?.summary}</Text>\n          </View>\n        )}\n\n        {/* Critical Alerts */}\n        {criticalAlerts.length > 0 && (\n          <View style={styles.section}>\n            <Text style={styles.sectionTitle}>🚨 Critical Alerts</Text>\n            {criticalAlerts.map(renderCriticalAlert)}\n          </View>\n        )}\n\n        {/* High Priority Recommendations */}\n        {recommendationsByPriority.critical.length > 0 && (\n          <View style={styles.section}>\n            <Text style={styles.sectionTitle}>⚡ Critical Recommendations</Text>\n            {recommendationsByPriority.critical.map(renderRecommendation)}\n          </View>\n        )}\n\n        {recommendationsByPriority.high.length > 0 && (\n          <View style={styles.section}>\n            <Text style={styles.sectionTitle}>🔥 High Priority Recommendations</Text>\n            {recommendationsByPriority.high.map(renderRecommendation)}\n          </View>\n        )}\n\n        {/* Medium Priority Recommendations */}\n        {recommendationsByPriority.medium.length > 0 && (\n          <View style={styles.section}>\n            <Text style={styles.sectionTitle}>📋 Medium Priority Recommendations</Text>\n            {recommendationsByPriority.medium.slice(0, 3).map(renderRecommendation)}\n            {recommendationsByPriority.medium.length > 3 && (\n              <Text style={styles.moreText}>+{recommendationsByPriority.medium.length - 3} more recommendations</Text>\n            )}\n          </View>\n        )}\n\n        {/* Empty State */}\n        {reports.length === 0 && (\n          <View style={styles.emptyState}>\n            <Activity size={48} color={colors.gray} />\n            <Text style={styles.emptyTitle}>No Lab Reports Yet</Text>\n            <Text style={styles.emptySubtitle}>\n              Add your first blood report to get personalized analysis and recommendations\n            </Text>\n          </View>\n        )}\n      </ScrollView>\n\n      {/* Add Report Button */}\n      <TouchableOpacity \n        style={styles.addButton} \n        onPress={() => setShowForm(true)}\n      >\n        <Plus size={24} color={colors.white} />\n        <Text style={styles.addButtonText}>Add Lab Report</Text>\n      </TouchableOpacity>\n\n      {/* Blood Report Form Modal */}\n      <Modal\n        visible={showForm}\n        animationType=\"slide\"\n        presentationStyle=\"pageSheet\"\n      >\n        <BloodReportForm onClose={() => setShowForm(false)} />\n      </Modal>\n    </View>\n  );\n};\n\nconst styles = StyleSheet.create({\n  container: {\n    flex: 1,\n    backgroundColor: colors.background,\n  },\n  content: {\n    flex: 1,\n    padding: 16,\n  },\n  loadingContainer: {\n    flex: 1,\n    justifyContent: 'center',\n    alignItems: 'center',\n  },\n  loadingText: {\n    fontSize: 16,\n    color: colors.textSecondary,\n  },\n  statsContainer: {\n    flexDirection: 'row',\n    gap: 12,\n    marginBottom: 16,\n  },\n  statsCard: {\n    flex: 1,\n    backgroundColor: colors.white,\n    borderRadius: 12,\n    padding: 16,\n    borderLeftWidth: 4,\n  },\n  statsHeader: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    gap: 8,\n    marginBottom: 8,\n  },\n  statsTitle: {\n    fontSize: 12,\n    fontWeight: '500' as const,\n    color: colors.textSecondary,\n  },\n  statsValue: {\n    fontSize: 24,\n    fontWeight: 'bold' as const,\n    color: colors.text,\n    marginBottom: 4,\n  },\n  statsSubtitle: {\n    fontSize: 11,\n    color: colors.textSecondary,\n  },\n  latestReportCard: {\n    backgroundColor: colors.white,\n    borderRadius: 12,\n    padding: 16,\n    marginBottom: 16,\n  },\n  section: {\n    marginBottom: 16,\n  },\n  sectionTitle: {\n    fontSize: 18,\n    fontWeight: 'bold' as const,\n    color: colors.text,\n    marginBottom: 12,\n  },\n  riskLevel: {\n    fontSize: 14,\n    color: colors.textSecondary,\n    marginBottom: 8,\n  },\n  riskValue: {\n    fontWeight: 'bold' as const,\n  },\n  summary: {\n    fontSize: 14,\n    color: colors.text,\n    lineHeight: 20,\n  },\n  criticalAlertCard: {\n    backgroundColor: colors.danger,\n    borderRadius: 12,\n    padding: 16,\n    marginBottom: 8,\n  },\n  alertHeader: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    gap: 8,\n    marginBottom: 8,\n  },\n  alertTitle: {\n    fontSize: 16,\n    fontWeight: 'bold' as const,\n    color: colors.white,\n    flex: 1,\n  },\n  alertValue: {\n    fontSize: 18,\n    fontWeight: 'bold' as const,\n    color: colors.white,\n  },\n  alertExplanation: {\n    fontSize: 14,\n    color: colors.white,\n    marginBottom: 8,\n    lineHeight: 18,\n  },\n  alertAction: {\n    fontSize: 12,\n    color: colors.white,\n    fontWeight: '500' as const,\n  },\n  recommendationCard: {\n    backgroundColor: colors.white,\n    borderRadius: 12,\n    padding: 16,\n    marginBottom: 8,\n  },\n  recHeader: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    gap: 12,\n    marginBottom: 8,\n  },\n  priorityBadge: {\n    paddingHorizontal: 8,\n    paddingVertical: 4,\n    borderRadius: 6,\n  },\n  priorityText: {\n    fontSize: 10,\n    fontWeight: 'bold' as const,\n    color: colors.white,\n  },\n  recTitle: {\n    fontSize: 16,\n    fontWeight: '600' as const,\n    color: colors.text,\n    flex: 1,\n  },\n  recDescription: {\n    fontSize: 14,\n    color: colors.textSecondary,\n    marginBottom: 12,\n    lineHeight: 18,\n  },\n  foodsSection: {\n    marginBottom: 12,\n  },\n  foodsTitle: {\n    fontSize: 12,\n    fontWeight: '600' as const,\n    color: colors.text,\n    marginBottom: 4,\n  },\n  foodItem: {\n    fontSize: 12,\n    color: colors.textSecondary,\n    marginLeft: 8,\n  },\n  supplementsSection: {\n    marginBottom: 12,\n  },\n  supplementsTitle: {\n    fontSize: 12,\n    fontWeight: '600' as const,\n    color: colors.text,\n    marginBottom: 4,\n  },\n  supplementItem: {\n    fontSize: 12,\n    color: colors.textSecondary,\n    marginLeft: 8,\n  },\n  evidence: {\n    fontSize: 11,\n    color: colors.gray,\n    fontStyle: 'italic' as const,\n  },\n  moreText: {\n    fontSize: 12,\n    color: colors.primary,\n    textAlign: 'center',\n    marginTop: 8,\n    fontWeight: '500' as const,\n  },\n  emptyState: {\n    alignItems: 'center',\n    justifyContent: 'center',\n    paddingVertical: 48,\n  },\n  emptyTitle: {\n    fontSize: 18,\n    fontWeight: '600' as const,\n    color: colors.text,\n    marginTop: 16,\n    marginBottom: 8,\n  },\n  emptySubtitle: {\n    fontSize: 14,\n    color: colors.textSecondary,\n    textAlign: 'center',\n    lineHeight: 20,\n    paddingHorizontal: 32,\n  },\n  addButton: {\n    position: 'absolute',\n    bottom: 24,\n    right: 24,\n    backgroundColor: colors.primary,\n    flexDirection: 'row',\n    alignItems: 'center',\n    paddingHorizontal: 20,\n    paddingVertical: 14,\n    borderRadius: 28,\n    gap: 8,\n    elevation: 4,\n    shadowColor: colors.text,\n    shadowOffset: { width: 0, height: 2 },\n    shadowOpacity: 0.25,\n    shadowRadius: 4,\n  },\n  addButtonText: {\n    fontSize: 16,\n    fontWeight: '600' as const,\n    color: colors.white,\n  },\n});"
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { colors } from '@/constants/colors';
+import { useBloodReports } from '@/providers/BloodReportProvider';
+import { BloodReportForm } from './BloodReportForm';
+import { Plus, AlertTriangle, TrendingUp, Activity, FileText } from 'lucide-react-native';
+
+export const LabDashboard: React.FC = () => {
+  const { reports, latestReport, criticalAlerts, recommendationsByPriority, isLoading } = useBloodReports();
+  const [showForm, setShowForm] = useState(false);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading lab reports...</Text>
+      </View>
+    );
+  }
+
+  const renderCriticalAlert = (alert: any, index: number) => (
+    <View key={index} style={styles.criticalAlertCard}>
+      <View style={styles.alertHeader}>
+        <AlertTriangle size={20} color={colors.white} />
+        <Text style={styles.alertTitle}>{alert.parameter.toUpperCase()}</Text>
+        <Text style={styles.alertValue}>{alert.value}</Text>
+      </View>
+      <Text style={styles.alertExplanation}>{alert.explanation}</Text>
+      <Text style={styles.alertAction}>Action: {alert.clinicalSignificance}</Text>
+    </View>
+  );
+
+  const renderRecommendation = (rec: any, index: number) => (
+    <View key={index} style={styles.recommendationCard}>
+      <View style={styles.recHeader}>
+        <View style={[
+          styles.priorityBadge,
+          { backgroundColor: rec.priority === 'critical' ? colors.danger : rec.priority === 'high' ? colors.warning : colors.primary }
+        ]}>
+          <Text style={styles.priorityText}>{rec.priority.toUpperCase()}</Text>
+        </View>
+        <Text style={styles.recTitle}>{rec.title}</Text>
+      </View>
+      <Text style={styles.recDescription}>{rec.description}</Text>
+      {rec.foods && rec.foods.length > 0 && (
+        <View style={styles.foodsSection}>
+          <Text style={styles.foodsTitle}>Foods:</Text>
+          {rec.foods.map((food: string, idx: number) => (
+            <Text key={idx} style={styles.foodItem}>• {food}</Text>
+          ))}
+        </View>
+      )}
+      {rec.evidence && (
+        <Text style={styles.evidence}>Evidence: {rec.evidence}</Text>
+      )}
+    </View>
+  );
+
+  const renderLatestReport = () => {
+    if (!latestReport) {
+      return (
+        <View style={styles.noDataCard}>
+          <FileText size={48} color={colors.textSecondary} />
+          <Text style={styles.noDataTitle}>No Lab Reports</Text>
+          <Text style={styles.noDataText}>Add your first blood report to get started with personalized analysis</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.latestReportCard}>
+        <View style={styles.reportHeader}>
+          <Text style={styles.reportDate}>{latestReport.date}</Text>
+          <View style={[
+            styles.riskBadge,
+            { backgroundColor: latestReport.analysis?.overallRisk === 'high' ? colors.error : 
+                               latestReport.analysis?.overallRisk === 'moderate' ? colors.warning : colors.success }
+          ]}>
+            <Text style={styles.riskText}>
+              {latestReport.analysis?.overallRisk?.toUpperCase() || 'UNKNOWN'} RISK
+            </Text>
+          </View>
+        </View>
+        
+        <Text style={styles.reportSummary}>
+          {latestReport.analysis?.summary || 'Analysis pending...'}
+        </Text>
+
+        <View style={styles.reportStats}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{latestReport.analysis?.alerts.length || 0}</Text>
+            <Text style={styles.statLabel}>Alerts</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{latestReport.analysis?.recommendations.length || 0}</Text>
+            <Text style={styles.statLabel}>Recommendations</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{reports.length}</Text>
+            <Text style={styles.statLabel}>Total Reports</Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Lab Dashboard</Text>
+        <TouchableOpacity 
+          style={styles.addButton} 
+          onPress={() => setShowForm(true)}
+        >
+          <Plus size={24} color={colors.white} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {renderLatestReport()}
+
+        {criticalAlerts.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <AlertTriangle size={20} color={colors.error} />
+              <Text style={styles.sectionTitle}>Critical Alerts</Text>
+            </View>
+            {criticalAlerts.map(renderCriticalAlert)}
+          </View>
+        )}
+
+        {recommendationsByPriority.high.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <TrendingUp size={20} color={colors.warning} />
+              <Text style={styles.sectionTitle}>High Priority Recommendations</Text>
+            </View>
+            {recommendationsByPriority.high.map(renderRecommendation)}
+          </View>
+        )}
+
+        {recommendationsByPriority.medium.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Activity size={20} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Medium Priority Recommendations</Text>
+            </View>
+            {recommendationsByPriority.medium.map(renderRecommendation)}
+          </View>
+        )}
+      </ScrollView>
+
+      <Modal
+        visible={showForm}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <BloodReportForm onClose={() => setShowForm(false)} />
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: colors.text,
+  },
+  addButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    padding: 8,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  noDataCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 16,
+  },
+  noDataTitle: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: colors.text,
+  },
+  noDataText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  latestReportCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  reportHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reportDate: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: colors.text,
+  },
+  riskBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  riskText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: colors.white,
+  },
+  reportSummary: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  reportStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  statItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: colors.primary,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  section: {
+    marginBottom: 16,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: colors.text,
+  },
+  criticalAlertCard: {
+    backgroundColor: colors.error,
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  alertHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  alertTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: colors.white,
+    flex: 1,
+  },
+  alertValue: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: colors.white,
+  },
+  alertExplanation: {
+    fontSize: 14,
+    color: colors.white,
+    lineHeight: 20,
+  },
+  alertAction: {
+    fontSize: 12,
+    color: colors.white,
+    fontStyle: 'italic' as const,
+  },
+  recommendationCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  recHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  priorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  priorityText: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: colors.white,
+  },
+  recTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: colors.text,
+    flex: 1,
+  },
+  recDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  foodsSection: {
+    gap: 4,
+  },
+  foodsTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.text,
+  },
+  foodItem: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginLeft: 8,
+  },
+  evidence: {
+    fontSize: 12,
+    color: colors.primary,
+    fontStyle: 'italic' as const,
+  },
+});
