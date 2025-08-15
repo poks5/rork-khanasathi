@@ -6,6 +6,7 @@ export const colors = {
   success: '#4CAF50',
   warning: '#FF9800',
   danger: '#F44336',
+  error: '#F44336', // Added for compatibility
   
   warningLight: '#FFF3E0',
   successLight: '#E8F5E9',
