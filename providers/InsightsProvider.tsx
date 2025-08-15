@@ -139,6 +139,190 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
       ]
     };
 
+    // Hyperkalemia Management
+    const hyperkalemiaInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
+      title: 'Hyperkalemia Management: Critical Potassium Control',
+      description: 'Emergency and routine management of high potassium levels in dialysis patients',
+      category: 'mineral-management',
+      priority: 'critical',
+      tips: [
+        {
+          title: 'Emergency Hyperkalemia Protocol',
+          content: 'Potassium >6.0 mEq/L requires immediate medical attention. Stop all high-K foods, contact nephrologist, and prepare for emergency dialysis if needed.',
+          foods: {
+            avoid: ['All fruits', 'Vegetables', 'Dal/legumes', 'Nuts', 'Chocolate', 'Coconut water']
+          },
+          cookingTips: [
+            'Emergency diet: white rice, pasta, bread only',
+            'No fruits or vegetables until K+ <5.5',
+            'Contact healthcare team immediately',
+            'Monitor for heart rhythm changes'
+          ],
+          priority: 'critical',
+          evidence: 'KDOQI Emergency Guidelines'
+        },
+        {
+          title: 'Daily Potassium Restriction (<2000mg)',
+          content: 'Maintain strict potassium limit of 2000mg daily. Use leaching techniques for vegetables and choose low-K alternatives.',
+          foods: {
+            recommended: ['White rice', 'Pasta', 'White bread', 'Cauliflower (leached)', 'Cabbage (limited)'],
+            avoid: ['Bananas', 'Oranges', 'Potatoes', 'Tomatoes', 'Spinach', 'Dal']
+          },
+          cookingTips: [
+            'Leach vegetables: soak 2+ hours, boil, drain',
+            'Use small portions of leached vegetables',
+            'Avoid cooking water from vegetables',
+            'Choose canned fruits over fresh'
+          ],
+          priority: 'high',
+          evidence: 'Potassium Restriction Guidelines'
+        },
+        {
+          title: 'Medication Compliance for K+ Control',
+          content: 'Take potassium binders (Kayexalate, Patiromer) exactly as prescribed. Never skip doses, especially before dialysis.',
+          priority: 'high',
+          evidence: 'Binder Efficacy Studies'
+        }
+      ]
+    };
+
+    // Hyperphosphatemia Management
+    const hyperphosphatemiaInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
+      title: 'Hyperphosphatemia Control: Bone Disease Prevention',
+      description: 'Comprehensive phosphorus management to prevent bone disease and cardiovascular complications',
+      category: 'bone-health',
+      priority: 'high',
+      tips: [
+        {
+          title: 'Phosphate Binder Optimization',
+          content: 'Take phosphate binders with EVERY meal and snack. Timing is critical - take with first bite of food for maximum effectiveness.',
+          cookingTips: [
+            'Set phone reminders for binder timing',
+            'Keep binders at dining table',
+            'Take with first bite, not after eating',
+            'Never skip binders with protein meals'
+          ],
+          priority: 'critical',
+          evidence: 'KDIGO CKD-MBD Guidelines'
+        },
+        {
+          title: 'Hidden Phosphorus Sources',
+          content: 'Avoid processed foods with phosphate additives. These are 90% absorbed vs 60% from natural sources.',
+          foods: {
+            avoid: ['Processed meats', 'Sodas with phosphoric acid', 'Packaged foods', 'Fast food', 'Cheese spreads'],
+            recommended: ['Fresh meats', 'Homemade foods', 'Natural ingredients']
+          },
+          priority: 'high',
+          evidence: 'Phosphate Additive Research'
+        },
+        {
+          title: 'Protein-Phosphorus Balance',
+          content: 'Choose high-quality proteins with lower phosphorus content. Egg whites are ideal - complete protein with minimal phosphorus.',
+          foods: {
+            recommended: ['Egg whites', 'Fish (limited)', 'Chicken breast (small portions)'],
+            avoid: ['Dairy products', 'Nuts', 'Whole grains', 'Large meat portions']
+          },
+          priority: 'high'
+        }
+      ]
+    };
+
+    // Fluid Management
+    const fluidManagementInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
+      title: 'Fluid Balance: Preventing Overload & Hypotension',
+      description: 'Optimal fluid management between dialysis sessions for cardiovascular health',
+      category: 'fluid-balance',
+      priority: 'high',
+      tips: [
+        {
+          title: 'Daily Fluid Allowance Calculation',
+          content: 'Limit fluids to 500-750ml plus previous day urine output. Track all liquids including soups, ice, and hidden fluids in foods.',
+          cookingTips: [
+            'Use small cups for drinking',
+            'Measure and track all fluids',
+            'Include soup, dal water, and ice',
+            'Weigh yourself daily at same time'
+          ],
+          priority: 'high',
+          evidence: 'Fluid Management Guidelines'
+        },
+        {
+          title: 'Managing Thirst Without Excess Fluid',
+          content: 'Use ice chips, sugar-free gum, lemon wedges, and mouth rinses to manage thirst without increasing fluid intake.',
+          cookingTips: [
+            'Freeze allowed fluids as ice chips',
+            'Use lemon or lime for mouth freshness',
+            'Chew sugar-free gum',
+            'Rinse mouth without swallowing'
+          ],
+          priority: 'medium'
+        }
+      ]
+    };
+
+    // Anemia Management
+    const anemiaInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
+      title: 'Anemia Management: Iron & EPO Optimization',
+      description: 'Nutritional and medical management of kidney disease anemia',
+      category: 'anemia-management',
+      priority: 'medium',
+      tips: [
+        {
+          title: 'Iron-Rich Foods for Kidney Patients',
+          content: 'Choose kidney-safe iron sources. Avoid high-potassium iron-rich foods like spinach and dried fruits.',
+          foods: {
+            recommended: ['Chicken liver (small amounts)', 'Fish', 'Egg yolks (limited)', 'Iron-fortified cereals'],
+            avoid: ['Spinach', 'Dried fruits', 'Nuts', 'Whole grains']
+          },
+          priority: 'medium'
+        },
+        {
+          title: 'Iron Supplement Timing',
+          content: 'Take iron supplements away from phosphate binders and calcium. Best absorbed on empty stomach with vitamin C.',
+          cookingTips: [
+            'Take iron 2 hours before/after binders',
+            'Take with small amount of orange juice if tolerated',
+            'Avoid tea/coffee with iron supplements',
+            'Monitor for constipation'
+          ],
+          priority: 'medium'
+        }
+      ]
+    };
+
+    // Cardiovascular Protection
+    const cardiovascularInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
+      title: 'Cardiovascular Protection in Kidney Disease',
+      description: 'Heart-healthy strategies for dialysis patients at high cardiovascular risk',
+      category: 'cardiovascular-health',
+      priority: 'high',
+      tips: [
+        {
+          title: 'Sodium Restriction for Blood Pressure',
+          content: 'Limit sodium to 2000mg daily to control blood pressure and fluid retention. Read all food labels carefully.',
+          foods: {
+            avoid: ['Processed foods', 'Restaurant meals', 'Canned soups', 'Pickles', 'Salty snacks'],
+            recommended: ['Fresh foods', 'Homemade meals', 'Herbs and spices for flavor']
+          },
+          cookingTips: [
+            'Use herbs instead of salt',
+            'Rinse canned foods',
+            'Cook from scratch when possible',
+            'Taste food before adding salt'
+          ],
+          priority: 'high'
+        },
+        {
+          title: 'Omega-3 for Heart Health',
+          content: 'Include kidney-safe omega-3 sources 2-3 times weekly. Fish is preferred over supplements for dialysis patients.',
+          foods: {
+            recommended: ['Salmon (small portions)', 'Mackerel', 'Sardines (low sodium)', 'Fish oil (if prescribed)']
+          },
+          priority: 'medium'
+        }
+      ]
+    };
+
     return [
       {
         ...acharSafetyInsight,
@@ -150,6 +334,41 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
       {
         ...proteinSafetyInsight,
         id: `insight-protein-safety-${Date.now() + 1}`,
+        dateAdded: new Date().toISOString(),
+        isRead: false,
+        isBookmarked: false,
+      },
+      {
+        ...hyperkalemiaInsight,
+        id: `insight-hyperkalemia-${Date.now() + 2}`,
+        dateAdded: new Date().toISOString(),
+        isRead: false,
+        isBookmarked: false,
+      },
+      {
+        ...hyperphosphatemiaInsight,
+        id: `insight-hyperphosphatemia-${Date.now() + 3}`,
+        dateAdded: new Date().toISOString(),
+        isRead: false,
+        isBookmarked: false,
+      },
+      {
+        ...fluidManagementInsight,
+        id: `insight-fluid-management-${Date.now() + 4}`,
+        dateAdded: new Date().toISOString(),
+        isRead: false,
+        isBookmarked: false,
+      },
+      {
+        ...anemiaInsight,
+        id: `insight-anemia-${Date.now() + 5}`,
+        dateAdded: new Date().toISOString(),
+        isRead: false,
+        isBookmarked: false,
+      },
+      {
+        ...cardiovascularInsight,
+        id: `insight-cardiovascular-${Date.now() + 6}`,
         dateAdded: new Date().toISOString(),
         isRead: false,
         isBookmarked: false,
