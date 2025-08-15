@@ -333,6 +333,83 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
     );
     
+    // Hyperphosphatemia (High Phosphorus) Management – 4 tips
+    recommendations.push(
+      {
+        id: 'avoid-high-phosphorus-foods',
+        category: 'mineral-management',
+        title: {
+          en: 'Avoiding High-Phosphorus Foods',
+          ne: 'उच्च फस्फोरस भएका खानाहरूबाट बच्ने'
+        },
+        description: {
+          en: 'Avoid organ meats, nuts, seeds, and dark colas. Limit dairy (milk, yogurt, cheese). Choose white bread over whole grain.',
+          ne: 'भुँडीजात, बदाम/बीउ, र डार्क कोला नखानुहोस्। दूध, दही, चीज जस्ता डेरी सीमित गर्नुहोस्। पुरै अन्नको सट्टा सेतो रोटी रोज्नुहोस्।'
+        },
+        priority: 'high',
+        suggestedFoods: ['white-bread', 'rice-white', 'egg-white', 'fish-salmon'],
+        avoidFoods: ['liver', 'kidney', 'almonds', 'seeds-mixed', 'dark-soda', 'cheese-cottage'],
+        educationalContent: [{
+          en: 'KDIGO CKD-MBD: Lower dietary phosphorus by avoiding organ meats, nuts/seeds, and colas.',
+          ne: 'KDIGO CKD-MBD: भुँडीजात, बदाम/बीउ र कोला नखाँदा फस्फोरस घट्छ।'
+        }]
+      },
+      {
+        id: 'phosphate-binder-timing',
+        category: 'mineral-management',
+        title: {
+          en: 'Phosphate Binder Timing',
+          ne: 'फस्फेट बाइन्डरको समय'
+        },
+        description: {
+          en: 'Take phosphate binders with the first bite of every meal and snack containing protein. Do not skip with dal, meat, or dairy.',
+          ne: 'प्रोटिन भएका प्रत्येक खाना/खाजासँग पहिलो कुम्लोमै फस्फेट बाइन्डर लिनुहोस्। दाल, मासु वा डेरीसँग कहिल्यै नछोड्नुहोस्।'
+        },
+        priority: 'high',
+        educationalContent: [{
+          en: 'KDOQI 2020: Binders are most effective when taken with meals containing phosphorus.',
+          ne: 'KDOQI 2020: फस्फोरस भएका खानासँग बाइन्डर लिँदा बढी प्रभावकारी हुन्छ।'
+        }]
+      },
+      {
+        id: 'safe-nepali-protein-low-phos',
+        category: 'protein-optimization',
+        title: {
+          en: 'Safe Nepali Protein Alternatives (Low Phosphorus)',
+          ne: 'सुरक्षित नेपाली प्रोटिन विकल्प (कम फस्फोरस)'
+        },
+        description: {
+          en: 'Choose egg whites over whole eggs, fish over red meat, and limit dal to 1/4 cup per meal. Soak dal overnight and discard water.',
+          ne: 'पूरा अण्डाको सट्टा अण्डाको सेतो, रातो मासुको सट्टा माछा रोज्नुहोस्। प्रत्येक भोजनमा दाल १/४ कप मात्र। दाल रातभर भिजाएर पानी फाल्नुहोस्।'
+        },
+        priority: 'high',
+        suggestedFoods: ['egg-white', 'fish-salmon', 'chicken-breast', 'dal-masoor'],
+        avoidFoods: ['egg-whole', 'red-meat', 'dal-large-portions', 'almonds'],
+        educationalContent: [{
+          en: 'ISRNM: Emphasize high-quality protein with lower phosphorus load and preparation methods that reduce phosphorus.',
+          ne: 'ISRNM: कम फस्फोरस लोड भएका उच्च गुणस्तरका प्रोटिन तथा फस्फोरस घटाउने तयारी विधिमा जोड दिनुहोस्।'
+        }]
+      },
+      {
+        id: 'reading-labels-phosphorus',
+        category: 'mineral-management',
+        title: {
+          en: 'Reading Food Labels for Phosphorus',
+          ne: 'फस्फोरसका लागि फुड लेबल पढ्ने'
+        },
+        description: {
+          en: 'Avoid processed foods with phosphorus additives (phosphoric acid, sodium phosphate). Prefer fresh foods over packaged.',
+          ne: 'फस्फोरस एडिटिभ (phosphoric acid, sodium phosphate) भएका प्रशोधित खानेकुरा नखानुहोस्। प्याकेटेड भन्दा ताजा खाना रोज्नुहोस्।'
+        },
+        priority: 'medium',
+        avoidFoods: ['processed-meats', 'packaged-snacks', 'instant-noodles', 'soft-drinks'],
+        educationalContent: [{
+          en: 'Check ingredient lists for “phos-” additives; these are rapidly absorbed and raise serum phosphorus.',
+          ne: 'सामग्री सूचीमा “phos-” भएका एडिटिभ जाँच्नुहोस्; यिनीहरू छिटो सोसिन्छन् र फस्फोरस बढाउँछन्।'
+        }]
+      }
+    );
+
     return recommendations;
   }, [profile, todayIntake, isLoading]);
 
