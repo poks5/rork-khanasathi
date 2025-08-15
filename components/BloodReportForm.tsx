@@ -30,73 +30,139 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updatePreHD = useCallback((field: keyof LabValues, value: string) => {
-    // Handle decimal input properly
-    const numValue = value && value.trim() !== '' ? parseFloat(value) : undefined;
+    console.log(`🔬 Updating ${field}: \"${value}\"`);
     
-    // Only update if the value is valid or empty
-    if (value === '' || (!isNaN(numValue!) && numValue !== undefined)) {
-      setPreHD(prev => ({ ...prev, [field]: numValue }));
+    // Handle decimal input properly - allow empty string and valid numbers
+    let numValue: number | undefined = undefined;
+    
+    if (value === '' || value === '.') {
+      // Allow empty or just decimal point for user input
+      numValue = undefined;
+    } else {
+      const parsed = parseFloat(value);
+      if (!isNaN(parsed) && isFinite(parsed)) {
+        numValue = parsed;
+      } else {
+        // Invalid input, don't update
+        console.log(`❌ Invalid input for ${field}: \"${value}\"`);
+        return;
+      }
     }
+    
+    setPreHD(prev => {
+      const updated = { ...prev, [field]: numValue };
+      console.log(`📊 Updated ${field} to:`, numValue);
+      return updated;
+    });
 
-    // Real-time critical value detection
-    if (field === 'potassium' && numValue && !isNaN(numValue)) {
-      if (numValue > 6.0) {
-        setRealTimeAlert({
-          type: 'critical',
-          message: 'CRITICAL: Potassium >6.0 - Immediate medical attention required',
-          parameter: 'potassium',
-          value: numValue
-        });
-      } else if (numValue < 3.0) {
-        setRealTimeAlert({
-          type: 'critical',
-          message: 'CRITICAL: Potassium <3.0 - Risk of cardiac arrhythmia',
-          parameter: 'potassium',
-          value: numValue
-        });
-      } else if (numValue > 5.0 || numValue < 3.5) {
-        setRealTimeAlert({
-          type: 'warning',
-          message: `WARNING: Potassium ${numValue} is outside normal range (3.5-5.0)`,
-          parameter: 'potassium',
-          value: numValue
-        });
+    // Real-time critical value detection - only for valid numbers
+    if (numValue !== undefined && !isNaN(numValue)) {
+      if (field === 'potassium') {
+        if (numValue > 6.0) {
+          setRealTimeAlert({
+            type: 'critical',
+            message: 'CRITICAL: Potassium >6.0 - Immediate medical attention required',
+            parameter: 'potassium',
+            value: numValue
+          });
+        } else if (numValue < 3.0) {
+          setRealTimeAlert({
+            type: 'critical',
+            message: 'CRITICAL: Potassium <3.0 - Risk of cardiac arrhythmia',
+            parameter: 'potassium',
+            value: numValue
+          });
+        } else if (numValue > 5.0 || numValue < 3.5) {
+          setRealTimeAlert({
+            type: 'warning',
+            message: `WARNING: Potassium ${numValue} is outside normal range (3.5-5.0)`,
+            parameter: 'potassium',
+            value: numValue
+          });
+        } else {
+          setRealTimeAlert(null);
+        }
+      } else if (field === 'phosphorus') {
+        if (numValue > 7.0) {
+          setRealTimeAlert({
+            type: 'critical',
+            message: 'CRITICAL: Phosphorus >7.0 - Severe bone disease risk',
+            parameter: 'phosphorus',
+            value: numValue
+          });
+        } else if (numValue > 5.5 || numValue < 3.5) {
+          setRealTimeAlert({
+            type: 'warning',
+            message: `WARNING: Phosphorus ${numValue} is outside normal range (3.5-5.5)`,
+            parameter: 'phosphorus',
+            value: numValue
+          });
+        } else {
+          setRealTimeAlert(null);
+        }
+      } else if (field === 'albumin') {
+        if (numValue < 3.0) {
+          setRealTimeAlert({
+            type: 'critical',
+            message: 'CRITICAL: Albumin <3.0 - Severe malnutrition risk',
+            parameter: 'albumin',
+            value: numValue
+          });
+        } else if (numValue < 3.5) {
+          setRealTimeAlert({
+            type: 'warning',
+            message: `WARNING: Albumin ${numValue} is below normal (3.5-5.0)`,
+            parameter: 'albumin',
+            value: numValue
+          });
+        } else {
+          setRealTimeAlert(null);
+        }
+      } else if (field === 'hemoglobin') {
+        if (numValue < 9.0) {
+          setRealTimeAlert({
+            type: 'critical',
+            message: 'CRITICAL: Hemoglobin <9.0 - Severe anemia',
+            parameter: 'hemoglobin',
+            value: numValue
+          });
+        } else if (numValue < 11.0) {
+          setRealTimeAlert({
+            type: 'warning',
+            message: `WARNING: Hemoglobin ${numValue} is below target (11-12)`,
+            parameter: 'hemoglobin',
+            value: numValue
+          });
+        } else {
+          setRealTimeAlert(null);
+        }
+      } else if (field === 'urea') {
+        if (numValue > 80) {
+          setRealTimeAlert({
+            type: 'warning',
+            message: `WARNING: Blood Urea ${numValue} is high - may need dialysis adjustment`,
+            parameter: 'urea',
+            value: numValue
+          });
+        } else {
+          setRealTimeAlert(null);
+        }
+      } else if (field === 'creatinine') {
+        if (numValue > 15) {
+          setRealTimeAlert({
+            type: 'warning',
+            message: `WARNING: Creatinine ${numValue} is very high`,
+            parameter: 'creatinine',
+            value: numValue
+          });
+        } else {
+          setRealTimeAlert(null);
+        }
       } else {
         setRealTimeAlert(null);
       }
-    } else if (field === 'phosphorus' && numValue && !isNaN(numValue)) {
-      if (numValue > 7.0) {
-        setRealTimeAlert({
-          type: 'critical',
-          message: 'CRITICAL: Phosphorus >7.0 - Severe bone disease risk',
-          parameter: 'phosphorus',
-          value: numValue
-        });
-      } else if (numValue > 5.5 || numValue < 3.5) {
-        setRealTimeAlert({
-          type: 'warning',
-          message: `WARNING: Phosphorus ${numValue} is outside normal range (3.5-5.5)`,
-          parameter: 'phosphorus',
-          value: numValue
-        });
-      }
-    } else if (field === 'albumin' && numValue && !isNaN(numValue)) {
-      if (numValue < 3.0) {
-        setRealTimeAlert({
-          type: 'critical',
-          message: 'CRITICAL: Albumin <3.0 - Severe malnutrition risk',
-          parameter: 'albumin',
-          value: numValue
-        });
-      } else if (numValue < 3.5) {
-        setRealTimeAlert({
-          type: 'warning',
-          message: `WARNING: Albumin ${numValue} is below normal (3.5-5.0)`,
-          parameter: 'albumin',
-          value: numValue
-        });
-      }
-    } else if (field !== 'potassium' && field !== 'phosphorus' && field !== 'albumin') {
+    } else {
+      // Clear alerts when value is cleared
       setRealTimeAlert(null);
     }
   }, []);
@@ -107,6 +173,8 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
     setIsSubmitting(true);
     
     try {
+      console.log('🩸 Submitting blood report with data:', preHD);
+      
       const reportData = {
         date,
         preHD,
@@ -124,6 +192,8 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
         const newReport = addReport(reportData);
         const alertCount = newReport.analysis?.alerts.length || 0;
         const recommendationCount = newReport.analysis?.recommendations.length || 0;
+        
+        console.log(`✅ Report created with ${alertCount} alerts and ${recommendationCount} recommendations`);
         
         Alert.alert(
           'Analysis Complete',
@@ -154,9 +224,10 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
           style={styles.input}
           value={preHD[field]?.toString() || ''}
           onChangeText={(value) => updatePreHD(field, value)}
-          placeholder="0.0"
-          keyboardType="decimal-pad"
+          placeholder="Enter value"
+          keyboardType="numeric"
           returnKeyType="next"
+          selectTextOnFocus={true}
         />
         <Text style={styles.unit}>{unit}</Text>
       </View>

@@ -34,7 +34,7 @@ export const LabDashboard: React.FC = () => {
       <View style={styles.recHeader}>
         <View style={[
           styles.priorityBadge,
-          { backgroundColor: rec.priority === 'critical' ? colors.danger : rec.priority === 'high' ? colors.warning : colors.primary }
+          { backgroundColor: rec.priority === 'critical' ? colors.error : rec.priority === 'high' ? colors.warning : colors.primary }
         ]}>
           <Text style={styles.priorityText}>{rec.priority.toUpperCase()}</Text>
         </View>
