@@ -124,7 +124,7 @@ export default function FoodDetailsScreen() {
           style={styles.addButton}
           onPress={() => {
             router.push({
-              pathname: '/add-food' as any,
+              pathname: 'add-food' as any,
               params: { foodId: food.id }
             });
           }}

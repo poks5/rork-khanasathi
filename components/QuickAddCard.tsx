@@ -19,7 +19,7 @@ export function QuickAddCard() {
           key={meal.id}
           style={styles.mealCard}
           onPress={() => router.push({
-            pathname: '/(tabs)/add-food' as any,
+            pathname: 'add-food' as any,
             params: { foodId: meal.foodIds[0] }
           })}
         >

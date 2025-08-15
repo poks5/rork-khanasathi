@@ -100,7 +100,7 @@ export default function FoodsScreen() {
                 key={food.id}
                 style={styles.foodCard}
                 onPress={() => router.push({
-                  pathname: '/food-details' as any,
+                  pathname: 'food-details' as any,
                   params: { foodId: food.id }
                 })}
                 testID={`food-card-${food.id}`}

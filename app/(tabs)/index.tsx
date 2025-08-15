@@ -114,7 +114,7 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => router.push('/add-food' as any)}
+        onPress={() => router.push('add-food' as any)}
         testID="add-food-fab"
       >
         <Plus size={28} color={colors.white} />

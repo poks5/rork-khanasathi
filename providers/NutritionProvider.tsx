@@ -126,11 +126,11 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       labValues: []
     };
     
-    const recommendations: NutritionRecommendation[] = [];
+    const dynamicRecommendations: NutritionRecommendation[] = [];
     
     // Check potassium levels
     if (todayIntake.potassium > currentProfile.dailyLimits.potassium * 0.8) {
-      recommendations.push({
+      dynamicRecommendations.push({
         id: 'high-potassium',
         category: 'mineral-management',
         title: {
@@ -157,7 +157,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     
     // Check phosphorus levels
     if (todayIntake.phosphorus > currentProfile.dailyLimits.phosphorus * 0.8) {
-      recommendations.push({
+      dynamicRecommendations.push({
         id: 'high-phosphorus',
         category: 'mineral-management',
         title: {
@@ -180,7 +180,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     
     // Check fluid intake
     if (todayIntake.fluid > currentProfile.dailyLimits.fluid * 0.9) {
-      recommendations.push({
+      dynamicRecommendations.push({
         id: 'high-fluid',
         category: 'fluid-balance',
         title: {
@@ -201,7 +201,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     
     // Check protein intake
     if (todayIntake.protein < currentProfile.dailyLimits.protein * 0.5) {
-      recommendations.push({
+      dynamicRecommendations.push({
         id: 'low-protein',
         category: 'protein-optimization',
         title: {
@@ -226,7 +226,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       // Check for anemia
       const hemoglobin = currentProfile.labValues.find(lab => lab.name === 'hemoglobin');
       if (hemoglobin && hemoglobin.value < 11) {
-        recommendations.push({
+        dynamicRecommendations.push({
           id: 'anemia-management',
           category: 'anemia-management',
           title: {
@@ -251,7 +251,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       const calcium = currentProfile.labValues.find(lab => lab.name === 'calcium');
       const vitaminD = currentProfile.labValues.find(lab => lab.name === 'vitamin_d');
       if ((calcium && calcium.value < 8.5) || (vitaminD && vitaminD.value < 20)) {
-        recommendations.push({
+        dynamicRecommendations.push({
           id: 'bone-health',
           category: 'bone-health',
           title: {
@@ -272,8 +272,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
     }
 
-    // Hyperkalemia (High Potassium) Management – 4 tips
-    recommendations.push(
+    // Static recommendations that don't change based on intake
+    const staticRecommendations: NutritionRecommendation[] = [
       {
         id: 'low-potassium-nepali-staples',
         category: 'mineral-management',
@@ -354,10 +354,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
           ne: 'प्रत्येक सर्भिङमा कम पोटासियम भएको उच्च गुणस्तरको प्रोटिन रोज्नुहोस्।'
         }]
       }
-    );
-    
+    ,
     // Hyperphosphatemia (High Phosphorus) Management – 4 tips
-    recommendations.push(
       {
         id: 'avoid-high-phosphorus-foods',
         category: 'mineral-management',
@@ -431,10 +429,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
           ne: 'सामग्री सूचीमा “phos-” भएका एडिटिभ जाँच्नुहोस्; यिनीहरू छिटो सोसिन्छन् र फस्फोरस बढाउँछन्।'
         }]
       }
-    );
-
+    ,
     // Fluid Overload Management – 4 tips
-    recommendations.push(
       {
         id: 'hidden-fluid-sources',
         category: 'fluid-balance',
@@ -501,10 +497,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
           { en: 'Reduce added water and simmer to desired thickness.', ne: 'थपिएको पानी कम गर्नुहोस् र आवश्यक बाक्लोपनासम्म सिमर गर्नुहोस्।' }
         ]
       }
-    );
-
+    ,
     // Achar Safety: Pickle Use in CKD & Dialysis Patients – 5 tips
-    recommendations.push(
       {
         id: 'achar-safe-daily-use',
         category: 'mineral-management',
@@ -622,9 +616,9 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
           { en: 'Patient education: Sodium increases thirst and interdialytic weight gain.', ne: 'रोगी शिक्षा: सोडियमले तिर्खा र डायलिसिसबीचको तौल बढाउँछ।' }
         ]
       }
-    );
+    ];
 
-    return recommendations;
+    return [...dynamicRecommendations, ...staticRecommendations];
   }, [profile, todayIntake, isLoading]);
 
   return useMemo(() => ({
