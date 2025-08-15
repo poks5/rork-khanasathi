@@ -1,31 +1,49 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
-import { FoodLogEntry, NutrientIntake, NutritionRecommendation, RecommendationCategory } from '@/types/food';
-import { useUserProfile } from './UserProfileProvider';
-import { getFoodById } from '@/data/foodDatabase';
+import { FoodLogEntry, NutrientIntake, NutritionRecommendation } from '@/types/food';
+import { UserProfile, DailyLimits } from '@/types/user';
+
+const defaultLimits: DailyLimits = {
+  potassium: 2000,
+  phosphorus: 1000,
+  sodium: 2000,
+  protein: 60,
+  calories: 2000,
+  fluid: 1500,
+};
 
 export const [NutritionProvider, useNutrition] = createContextHook(() => {
-  const { profile } = useUserProfile();
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadFoodLog();
+    loadData();
   }, []);
 
-  const loadFoodLog = async () => {
+  const loadData = async () => {
     try {
-      const stored = await AsyncStorage.getItem('foodLog');
-      if (stored) {
-        setFoodLog(JSON.parse(stored));
+      const [storedLog, storedProfile] = await Promise.all([
+        AsyncStorage.getItem('foodLog'),
+        AsyncStorage.getItem('userProfile')
+      ]);
+      
+      if (storedLog) {
+        setFoodLog(JSON.parse(storedLog));
+      }
+      
+      if (storedProfile) {
+        setProfile(JSON.parse(storedProfile));
       }
     } catch (error) {
-      console.error('Error loading food log:', error);
+      console.error('Error loading data:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   const saveFoodLog = async (log: FoodLogEntry[]) => {
     try {
@@ -73,7 +91,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     );
   }, [foodLog]);
 
-  const addToLog = (entry: Omit<FoodLogEntry, 'id' | 'timestamp'>) => {
+  const addToLog = useCallback((entry: Omit<FoodLogEntry, 'id' | 'timestamp'>) => {
     const newEntry: FoodLogEntry = {
       ...entry,
       id: Date.now().toString(),
@@ -82,31 +100,36 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     const updatedLog = [...foodLog, newEntry];
     setFoodLog(updatedLog);
     saveFoodLog(updatedLog);
-  };
+  }, [foodLog]);
 
-  const removeFromLog = (id: string) => {
+  const removeFromLog = useCallback((id: string) => {
     const updatedLog = foodLog.filter(entry => entry.id !== id);
     setFoodLog(updatedLog);
     saveFoodLog(updatedLog);
-  };
+  }, [foodLog]);
 
-  const clearLog = async () => {
+  const clearLog = useCallback(async () => {
     setFoodLog([]);
     try {
       await AsyncStorage.removeItem('foodLog');
     } catch (error) {
       console.error('Error clearing food log:', error);
     }
-  };
+  }, []);
 
   // Generate recommendations based on user profile and food log
   const recommendations = useMemo(() => {
-    if (isLoading || !profile) return [];
+    if (isLoading) return [];
+    
+    const currentProfile = profile || {
+      dailyLimits: defaultLimits,
+      labValues: []
+    };
     
     const recommendations: NutritionRecommendation[] = [];
     
     // Check potassium levels
-    if (todayIntake.potassium > profile.dailyLimits.potassium * 0.8) {
+    if (todayIntake.potassium > currentProfile.dailyLimits.potassium * 0.8) {
       recommendations.push({
         id: 'high-potassium',
         category: 'mineral-management',
@@ -133,7 +156,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
     
     // Check phosphorus levels
-    if (todayIntake.phosphorus > profile.dailyLimits.phosphorus * 0.8) {
+    if (todayIntake.phosphorus > currentProfile.dailyLimits.phosphorus * 0.8) {
       recommendations.push({
         id: 'high-phosphorus',
         category: 'mineral-management',
@@ -156,7 +179,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
     
     // Check fluid intake
-    if (todayIntake.fluid > profile.dailyLimits.fluid * 0.9) {
+    if (todayIntake.fluid > currentProfile.dailyLimits.fluid * 0.9) {
       recommendations.push({
         id: 'high-fluid',
         category: 'fluid-balance',
@@ -177,7 +200,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
     
     // Check protein intake
-    if (todayIntake.protein < profile.dailyLimits.protein * 0.5) {
+    if (todayIntake.protein < currentProfile.dailyLimits.protein * 0.5) {
       recommendations.push({
         id: 'low-protein',
         category: 'protein-optimization',
@@ -199,9 +222,9 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
     
     // Add more recommendations based on lab values if available
-    if (profile.labValues && profile.labValues.length > 0) {
+    if (currentProfile.labValues && currentProfile.labValues.length > 0) {
       // Check for anemia
-      const hemoglobin = profile.labValues.find(lab => lab.name === 'hemoglobin');
+      const hemoglobin = currentProfile.labValues.find(lab => lab.name === 'hemoglobin');
       if (hemoglobin && hemoglobin.value < 11) {
         recommendations.push({
           id: 'anemia-management',
@@ -225,8 +248,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
       
       // Check for bone health
-      const calcium = profile.labValues.find(lab => lab.name === 'calcium');
-      const vitaminD = profile.labValues.find(lab => lab.name === 'vitamin_d');
+      const calcium = currentProfile.labValues.find(lab => lab.name === 'calcium');
+      const vitaminD = currentProfile.labValues.find(lab => lab.name === 'vitamin_d');
       if ((calcium && calcium.value < 8.5) || (vitaminD && vitaminD.value < 20)) {
         recommendations.push({
           id: 'bone-health',
@@ -604,14 +627,14 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     return recommendations;
   }, [profile, todayIntake, isLoading]);
 
-  return {
+  return useMemo(() => ({
     foodLog,
     todayIntake,
-    dailyLimits: profile.dailyLimits,
+    dailyLimits: profile?.dailyLimits || defaultLimits,
     recommendations,
     addToLog,
     removeFromLog,
     clearLog,
     isLoading,
-  };
+  }), [foodLog, todayIntake, profile?.dailyLimits, recommendations, addToLog, removeFromLog, clearLog, isLoading]);
 });
