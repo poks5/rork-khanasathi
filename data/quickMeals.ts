@@ -1,0 +1,42 @@
+export const quickMeals = [
+  {
+    id: 'breakfast-dal-bhat',
+    nameEn: 'Dal Bhat',
+    nameNe: 'दाल भात',
+    emoji: '🍛',
+    time: 'Morning',
+    foodIds: ['dal', 'rice-white'],
+  },
+  {
+    id: 'breakfast-roti',
+    nameEn: 'Roti & Egg',
+    nameNe: 'रोटी र अण्डा',
+    emoji: '🍳',
+    time: 'Morning',
+    foodIds: ['roti', 'egg'],
+  },
+  {
+    id: 'lunch-momo',
+    nameEn: 'Momo',
+    nameNe: 'मोमो',
+    emoji: '🥟',
+    time: 'Lunch',
+    foodIds: ['momo'],
+  },
+  {
+    id: 'snack-tea',
+    nameEn: 'Tea Time',
+    nameNe: 'चिया',
+    emoji: '☕',
+    time: 'Evening',
+    foodIds: ['tea-milk'],
+  },
+  {
+    id: 'dinner-chicken',
+    nameEn: 'Chicken',
+    nameNe: 'कुखुरा',
+    emoji: '🍗',
+    time: 'Dinner',
+    foodIds: ['chicken'],
+  },
+];
