@@ -1,61 +1,83 @@
 import { Tabs } from "expo-router";
 import { Home, Book, User, Calendar, Lightbulb } from "lucide-react-native";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { colors } from "@/constants/colors";
 
 export default function TabLayout() {
   const { t } = useLanguage();
 
+  const screenOptions = useMemo(() => ({
+    tabBarActiveTintColor: colors.primary,
+    tabBarInactiveTintColor: colors.gray,
+    headerShown: false,
+    tabBarStyle: {
+      backgroundColor: colors.white,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingBottom: 5,
+      paddingTop: 5,
+      height: 60,
+    },
+  }), []);
+
+  const homeOptions = useMemo(() => ({
+    title: t('tabs.home'),
+  }), [t]);
+  const foodsOptions = useMemo(() => ({
+    title: t('tabs.foods'),
+  }), [t]);
+  const logOptions = useMemo(() => ({
+    title: t('tabs.log'),
+  }), [t]);
+  const insightsOptions = useMemo(() => ({
+    title: t('tabs.insights') ?? 'Insights',
+  }), [t]);
+  const profileOptions = useMemo(() => ({
+    title: t('tabs.profile'),
+  }), [t]);
+
+  const renderHomeIcon = useCallback(({ color }: { color: string }) => <Home size={24} color={color} />, []);
+  const renderFoodsIcon = useCallback(({ color }: { color: string }) => <Book size={24} color={color} />, []);
+  const renderLogIcon = useCallback(({ color }: { color: string }) => <Calendar size={24} color={color} />, []);
+  const renderInsightsIcon = useCallback(({ color }: { color: string }) => <Lightbulb size={24} color={color} />, []);
+  const renderProfileIcon = useCallback(({ color }: { color: string }) => <User size={24} color={color} />, []);
+
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.gray,
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
-        },
-      }}
-    >
+    <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{
-          title: t('tabs.home'),
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          ...homeOptions,
+          tabBarIcon: renderHomeIcon,
         }}
       />
       <Tabs.Screen
         name="foods"
         options={{
-          title: t('tabs.foods'),
-          tabBarIcon: ({ color }) => <Book size={24} color={color} />,
+          ...foodsOptions,
+          tabBarIcon: renderFoodsIcon,
         }}
       />
       <Tabs.Screen
         name="log"
         options={{
-          title: t('tabs.log'),
-          tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
+          ...logOptions,
+          tabBarIcon: renderLogIcon,
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
-          title: t('tabs.insights') ?? 'Insights',
-          tabBarIcon: ({ color }) => <Lightbulb size={24} color={color} />,
+          ...insightsOptions,
+          tabBarIcon: renderInsightsIcon,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('tabs.profile'),
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+          ...profileOptions,
+          tabBarIcon: renderProfileIcon,
         }}
       />
     </Tabs>

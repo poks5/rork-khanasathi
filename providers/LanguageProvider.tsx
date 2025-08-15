@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { translations } from '@/data/translations';
@@ -26,31 +26,33 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     }
   };
 
-  const toggleLanguage = async () => {
-    const newLang = language === 'en' ? 'ne' : 'en';
+  const toggleLanguage = useCallback(async () => {
+    const newLang: Language = language === 'en' ? 'ne' : 'en';
     setLanguage(newLang);
     try {
       await AsyncStorage.setItem('language', newLang);
     } catch (error) {
       console.error('Error saving language:', error);
     }
-  };
+  }, [language]);
 
-  const t = (key: string): string => {
+  const t = useCallback((key: string): string => {
     const keys = key.split('.');
     let value: any = translations[language];
-    
+
     for (const k of keys) {
       value = value?.[k];
     }
-    
-    return value || key;
-  };
 
-  return {
+    return (value as string) || key;
+  }, [language]);
+
+  const value = useMemo(() => ({
     language,
     toggleLanguage,
     t,
     isLoading,
-  };
+  }), [language, toggleLanguage, t, isLoading]);
+
+  return value;
 });
