@@ -190,7 +190,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
           ne: 'तपाईंको प्रोटिन सेवन सिफारिस गरिएको स्तर भन्दा कम छ। गुणस्तरीय प्रोटिन स्रोतहरू थप्नुहोस्।'
         },
         priority: 'medium',
-        suggestedFoods: ['egg-white', 'chicken-breast', 'fish-cod'],
+        suggestedFoods: ['egg-white', 'chicken-breast', 'fish-salmon'],
         educationalContent: [{
           en: 'Adequate protein is essential for maintaining muscle mass and overall health.',
           ne: 'पर्याप्त प्रोटिन मांसपेशी मास र समग्र स्वास्थ्य कायम राख्न आवश्यक छ।'
@@ -248,6 +248,90 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
         });
       }
     }
+
+    // Hyperkalemia (High Potassium) Management – 4 tips
+    recommendations.push(
+      {
+        id: 'low-potassium-nepali-staples',
+        category: 'mineral-management',
+        title: {
+          en: 'Low-Potassium Nepali Staples',
+          ne: 'कम पोटासियम नेपाली मुख्य भोजन'
+        },
+        description: {
+          en: 'Choose refined grains like white rice, refined flour products, and white bread over whole grains to lower potassium.',
+          ne: 'समग्र अन्नको सट्टा सेतो चामल, मैदा र सेतो रोटीजस्ता परिष्कृत अन्न रोज्नुहोस् पोटासियम कम गर्न।'
+        },
+        priority: 'high',
+        suggestedFoods: ['rice-white', 'white-bread'],
+        avoidFoods: ['rice-brown', 'dal-masoor', 'dal-chana', 'almonds'],
+        educationalContent: [{
+          en: 'KDOQI 2020: Refined grains generally have less potassium than whole grains.',
+          ne: 'KDOQI 2020: परिष्कृत अन्नमा समग्र अन्न भन्दा कम पोटासियम हुन्छ।'
+        }]
+      },
+      {
+        id: 'double-boiling-technique',
+        category: 'mineral-management',
+        title: {
+          en: 'Double-Boiling Technique for Vegetables',
+          ne: 'तरकारीका लागि दोहोरो उमाल्ने तरिका'
+        },
+        description: {
+          en: 'Cut small, boil 3–5 minutes, drain fully, then boil again in fresh water to remove 30–50% potassium.',
+          ne: 'सानो टुक्रा काटेर ३–५ मिनेट उमाल्नुहोस्, पानी पूरै फाल्नुहोस्, फेरि ताजा पानीमा उमाल्दा ३०–५०% पोटासियम कम हुन्छ।'
+        },
+        priority: 'high',
+        suggestedFoods: ['cauliflower', 'cabbage', 'green-beans'],
+        cookingTips: [
+          { en: 'Always discard the first boiling water.', ne: 'पहिलो उमालेको पानी सधैं फाल्नुहोस्।' },
+          { en: 'Cut vegetables into small pieces.', ne: 'तरकारीलाई साना टुक्रामा काट्नुहोस्।' },
+          { en: 'Boil at least 2 times for best reduction.', ne: 'सर्वोत्तम नतिजाका लागि कम्तीमा २ पटक उमाल्नुहोस्।' }
+        ],
+        educationalContent: [{
+          en: 'Renal Nutrition Guidelines: Double-boiling reduces potassium by up to 50%.',
+          ne: 'किड्नी पोषण दिशानिर्देश: दोहोरो उमाल्दा पोटासियम ५०% सम्म घट्छ।'
+        }]
+      },
+      {
+        id: 'safe-fruits-high-potassium',
+        category: 'mineral-management',
+        title: {
+          en: 'Safe Fruits when Potassium is High',
+          ne: 'पोटासियम उच्च हुँदा सुरक्षित फलफूल'
+        },
+        description: {
+          en: 'Prefer apples, pears, grapes, and berries. Limit to 1–2 servings daily. Avoid bananas, oranges, and melons.',
+          ne: 'स्याउ, नासपाती, अंगुर र बेरी प्राथमिकता दिनुहोस्। दिनमा १–२ सर्भिङ मात्र। केरा, सुन्तला र खरबुजा नखानुहोस्।'
+        },
+        priority: 'high',
+        suggestedFoods: ['apple', 'pear', 'grapes', 'berries-mixed'],
+        avoidFoods: ['banana', 'orange', 'melon'],
+        educationalContent: [{
+          en: 'NKF Guidelines: Choose lower-potassium fruits and control portions.',
+          ne: 'NKF मार्गदर्शन: कम पोटासियम भएका फलफूल रोज्नुहोस् र परिमाण नियन्त्रण गर्नुहोस्।'
+        }]
+      },
+      {
+        id: 'protein-low-potassium-sources',
+        category: 'protein-optimization',
+        title: {
+          en: 'Protein Sources Low in Potassium',
+          ne: 'कम पोटासियम प्रोटिन स्रोत'
+        },
+        description: {
+          en: 'Egg whites, chicken breast, and select fish are renal-friendly choices. Limit red meat; avoid organ meats.',
+          ne: 'अण्डाको सेतो भाग, कुखुराको छाती र केही माछा किड्नीमैत्री विकल्प हुन्। रातो मासु सीमित गर्नुहोस्; भुँडीजात नखानुहोस्।'
+        },
+        priority: 'medium',
+        suggestedFoods: ['egg-white', 'chicken-breast', 'fish-salmon'],
+        avoidFoods: ['almonds', 'dal-masoor', 'dal-chana', 'fish-cod'],
+        educationalContent: [{
+          en: 'Focus on high-quality protein with lower potassium per serving.',
+          ne: 'प्रत्येक सर्भिङमा कम पोटासियम भएको उच्च गुणस्तरको प्रोटिन रोज्नुहोस्।'
+        }]
+      }
+    );
     
     return recommendations;
   }, [profile, todayIntake, isLoading]);
