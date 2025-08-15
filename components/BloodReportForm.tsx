@@ -168,7 +168,7 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.tabContent}>
           <Text style={styles.sectionTitle}>Essential Dialysis Monitoring</Text>
-          {renderLabInput('Urea (BUN)', 'urea', 'mg/dL', '20-60')}
+          {renderLabInput('Blood Urea', 'urea', 'mg/dL', '15-45')}
           {renderLabInput('Creatinine', 'creatinine', 'mg/dL', '8-12')}
           {renderLabInput('Potassium ⚠️', 'potassium', 'mEq/L', '3.5-5.0')}
           {renderLabInput('Sodium', 'sodium', 'mEq/L', '136-145')}
