@@ -388,7 +388,9 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setRecommendations(JSON.parse(stored));
+        const parsedRecommendations = JSON.parse(stored);
+        console.log(`📚 Loaded ${parsedRecommendations.length} insight recommendations from storage`);
+        setRecommendations(parsedRecommendations);
       } else {
         // If no stored recommendations, add predefined ones
         console.log('No stored recommendations found, adding predefined insights');
@@ -396,6 +398,9 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
       }
     } catch (error) {
       console.error('Error loading insight recommendations:', error);
+      // Fallback to predefined insights if storage fails
+      console.log('Falling back to predefined insights due to storage error');
+      await addPredefinedInsightsOnFirstLoad();
     } finally {
       setIsLoading(false);
     }

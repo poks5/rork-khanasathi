@@ -30,13 +30,16 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updatePreHD = useCallback((field: keyof LabValues, value: string) => {
-    console.log(`🔬 Updating ${field}: \"${value}\"`);
+    console.log(`🔬 Updating ${field}: "${value}"`);
     
     // Handle decimal input properly - allow empty string and valid numbers
     let numValue: number | undefined = undefined;
     
-    if (value === '' || value === '.') {
-      // Allow empty or just decimal point for user input
+    if (value === '') {
+      // Empty input - clear the value
+      numValue = undefined;
+    } else if (value === '.' || value === '0.') {
+      // Allow decimal point input but don't store yet
       numValue = undefined;
     } else {
       const parsed = parseFloat(value);
@@ -44,14 +47,14 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
         numValue = parsed;
       } else {
         // Invalid input, don't update
-        console.log(`❌ Invalid input for ${field}: \"${value}\"`);
+        console.log(`❌ Invalid input for ${field}: "${value}"`);
         return;
       }
     }
     
     setPreHD(prev => {
       const updated = { ...prev, [field]: numValue };
-      console.log(`📊 Updated ${field} to:`, numValue);
+      console.log(`📊 Updated ${field} to:`, numValue, 'from input:', value);
       return updated;
     });
 
@@ -225,9 +228,10 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
           value={preHD[field]?.toString() || ''}
           onChangeText={(value) => updatePreHD(field, value)}
           placeholder="Enter value"
-          keyboardType="numeric"
+          keyboardType="decimal-pad"
           returnKeyType="next"
           selectTextOnFocus={true}
+          autoCorrect={false}
         />
         <Text style={styles.unit}>{unit}</Text>
       </View>
