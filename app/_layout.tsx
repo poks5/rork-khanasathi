@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/providers/LanguageProvider";
 import { NutritionProvider } from "@/providers/NutritionProvider";
 import { UserProfileProvider } from "@/providers/UserProfileProvider";
 import { BloodReportProvider } from "@/providers/BloodReportProvider";
+import { InsightsProvider } from "@/providers/InsightsProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
@@ -47,9 +48,11 @@ export default function RootLayout() {
           <UserProfileProvider>
             <NutritionProvider>
               <BloodReportProvider>
-                <ErrorBoundary>
-                  <RootLayoutNav />
-                </ErrorBoundary>
+                <InsightsProvider>
+                  <ErrorBoundary>
+                    <RootLayoutNav />
+                  </ErrorBoundary>
+                </InsightsProvider>
               </BloodReportProvider>
             </NutritionProvider>
           </UserProfileProvider>

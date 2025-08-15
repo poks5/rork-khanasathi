@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { FoodLogEntry, NutrientIntake, NutritionRecommendation } from '@/types/food';
 import { UserProfile, DailyLimits } from '@/types/user';
+import { useInsights } from '@/providers/InsightsProvider';
 
 const defaultLimits: DailyLimits = {
   potassium: 2000,
@@ -17,6 +18,16 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Get insights recommendations if available
+  let insightRecommendations: NutritionRecommendation[] = [];
+  try {
+    const insights = useInsights();
+    insightRecommendations = insights.convertToNutritionRecommendations();
+  } catch {
+    // InsightsProvider might not be available in all contexts
+    console.log('InsightsProvider not available in this context');
+  }
 
   useEffect(() => {
     loadData();
@@ -123,7 +134,6 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const vitaminDValue = useMemo(() => profile?.labValues?.find(lab => lab.name === 'vitamin_d')?.value, [profile?.labValues]);
 
   // Generate recommendations based on user profile and food log
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const recommendations = useMemo(() => {
     if (isLoading) return [];
     
@@ -701,13 +711,10 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
     ];
 
-    return [...dynamicRecommendations, ...staticRecommendations];
+    // Combine all recommendations: dynamic, static, and insights
+    return [...dynamicRecommendations, ...staticRecommendations, ...insightRecommendations];
   }, [
-    profile?.dailyLimits?.potassium,
-    profile?.dailyLimits?.phosphorus, 
-    profile?.dailyLimits?.fluid,
-    profile?.dailyLimits?.protein,
-    profile?.labValues?.length,
+    profile,
     hemoglobinValue,
     calciumValue,
     vitaminDValue,
@@ -715,7 +722,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     todayIntake.phosphorus, 
     todayIntake.fluid, 
     todayIntake.protein, 
-    isLoading
+    isLoading,
+    insightRecommendations
   ]);
 
   return useMemo(() => ({

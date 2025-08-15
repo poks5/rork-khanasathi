@@ -83,9 +83,10 @@ export type RecommendationCategory =
   | 'fluid-balance'
   | 'bone-health'
   | 'anemia-management'
-  | 'cardiovascular-health';
+  | 'cardiovascular-health'
+  | 'safety-guidelines';
 
-export type RecommendationPriority = 'high' | 'medium' | 'low';
+export type RecommendationPriority = 'high' | 'medium' | 'low' | 'critical';
 
 export interface NutritionRecommendation {
   id: string;
@@ -110,4 +111,32 @@ export interface NutritionRecommendation {
     en: string;
     ne: string;
   }[];
+  source?: 'system' | 'insights' | 'lab-analysis';
+  dateAdded?: string;
+  isRead?: boolean;
+  isBookmarked?: boolean;
+  userNotes?: string;
+}
+
+export interface InsightRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  category: RecommendationCategory;
+  priority: RecommendationPriority;
+  tips: {
+    title: string;
+    content: string;
+    foods?: {
+      recommended?: string[];
+      avoid?: string[];
+    };
+    cookingTips?: string[];
+    priority: RecommendationPriority;
+    evidence?: string;
+  }[];
+  dateAdded: string;
+  isRead: boolean;
+  isBookmarked: boolean;
+  userNotes?: string;
 }
