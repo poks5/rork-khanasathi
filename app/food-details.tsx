@@ -39,7 +39,7 @@ export default function FoodDetailsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('foodDetails.title')}</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+        <TouchableOpacity onPress={() => router.dismiss()} style={styles.closeButton}>
           <X size={24} color={colors.text} />
         </TouchableOpacity>
       </View>

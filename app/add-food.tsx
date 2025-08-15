@@ -47,14 +47,20 @@ export default function AddFoodScreen() {
       nutrients: {
         calories: food.nutrients.calories * quantity,
         protein: food.nutrients.protein * quantity,
+        carbohydrates: food.nutrients.carbohydrates * quantity,
+        fat: food.nutrients.fat * quantity,
+        fiber: food.nutrients.fiber * quantity,
         potassium: food.nutrients.potassium * quantity,
         phosphorus: food.nutrients.phosphorus * quantity,
         sodium: food.nutrients.sodium * quantity,
+        calcium: food.nutrients.calcium * quantity,
         fluid: food.nutrients.fluid * quantity,
+        iron: food.nutrients.iron * quantity,
+        zinc: food.nutrients.zinc * quantity,
       },
     });
 
-    router.back();
+    router.dismiss();
   };
 
   const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snacks'];
@@ -63,7 +69,7 @@ export default function AddFoodScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('addFood.title')}</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+        <TouchableOpacity onPress={() => router.dismiss()} style={styles.closeButton}>
           <X size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
