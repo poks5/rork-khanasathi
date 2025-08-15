@@ -117,7 +117,13 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
   }, []);
 
+  // Extract lab values for stable dependencies
+  const hemoglobinValue = useMemo(() => profile?.labValues?.find(lab => lab.name === 'hemoglobin')?.value, [profile?.labValues]);
+  const calciumValue = useMemo(() => profile?.labValues?.find(lab => lab.name === 'calcium')?.value, [profile?.labValues]);
+  const vitaminDValue = useMemo(() => profile?.labValues?.find(lab => lab.name === 'vitamin_d')?.value, [profile?.labValues]);
+
   // Generate recommendations based on user profile and food log
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const recommendations = useMemo(() => {
     if (isLoading) return [];
     
@@ -615,11 +621,102 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
         educationalContent: [
           { en: 'Patient education: Sodium increases thirst and interdialytic weight gain.', ne: 'रोगी शिक्षा: सोडियमले तिर्खा र डायलिसिसबीचको तौल बढाउँछ।' }
         ]
+      },
+      // Kidney-Safe Protein Sources (Low PO₄ & Low K) – 4 tips
+      {
+        id: 'kidney-safe-protein-best-choices',
+        category: 'protein-optimization',
+        title: {
+          en: 'Best Protein Choices for Dialysis',
+          ne: 'डायलिसिसका लागि उत्तम प्रोटिन विकल्प'
+        },
+        description: {
+          en: 'Egg whites are the gold standard - complete protein with minimal phosphorus and potassium. Fish and chicken breast are excellent secondary choices.',
+          ne: 'अण्डाको सेतो भाग सुनौलो मापदण्डो हो - न्यूनतम फस्फोरस र पोटासियमसहित पूर्ण प्रोटिन। माछा र कुखुराको छाती उत्कृष्ट दोस्रो विकल्प हुन्।'
+        },
+        priority: 'high',
+        suggestedFoods: ['egg-white', 'fish-salmon', 'chicken-breast', 'paneer'],
+        educationalContent: [{
+          en: 'KDOQI Protein Guidelines: Egg whites provide complete amino acids with lowest mineral load.',
+          ne: 'KDOQI प्रोटिन दिशानिर्देश: अण्डाको सेतो भागले न्यूनतम खनिज लोडसहित पूर्ण एमिनो एसिड प्रदान गर्छ।'
+        }]
+      },
+      {
+        id: 'kidney-safe-protein-portion-control',
+        category: 'protein-optimization',
+        title: {
+          en: 'Portion Control for Protein',
+          ne: 'प्रोटिनका लागि मात्रा नियन्त्रण'
+        },
+        description: {
+          en: 'Limit protein to 1.2g/kg body weight daily. For a 60kg person, this is about 70g protein total. Track portions carefully.',
+          ne: 'दैनिक शरीरको तौल प्रति किलो १.२ ग्राम प्रोटिन सीमित गर्नुहोस्। ६० किलो व्यक्तिका लागि कुल ७० ग्राम प्रोटिन। मात्रा सावधानीपूर्वक ट्र्याक गर्नुहोस्।'
+        },
+        priority: 'high',
+        educationalContent: [{
+          en: 'ISRNM 2021: Adequate but not excessive protein intake prevents malnutrition while controlling uremic toxins.',
+          ne: 'ISRNM 2021: पर्याप्त तर अत्यधिक नभएको प्रोटिन सेवनले कुपोषण रोक्छ र युरेमिक विषाक्त पदार्थ नियन्त्रण गर्छ।'
+        }]
+      },
+      {
+        id: 'kidney-safe-protein-binder-timing',
+        category: 'protein-optimization',
+        title: {
+          en: 'Protein Timing with Phosphate Binders',
+          ne: 'फस्फेट बाइन्डरसँग प्रोटिनको समय'
+        },
+        description: {
+          en: 'Always take phosphate binders with protein-containing meals. Time binders with the first bite of dal, meat, or egg dishes.',
+          ne: 'प्रोटिन भएका खानासँग सधैं फस्फेट बाइन्डर लिनुहोस्। दाल, मासु, वा अण्डाका परिकारको पहिलो कुम्लोसँग बाइन्डर लिनुहोस्।'
+        },
+        priority: 'high',
+        educationalContent: [{
+          en: 'Binder Compliance Guidelines: Phosphate binders are most effective when taken with meals containing phosphorus.',
+          ne: 'बाइन्डर अनुपालन दिशानिर्देश: फस्फोरस भएका खानासँग लिँदा फस्फेट बाइन्डर सबैभन्दा प्रभावकारी हुन्छ।'
+        }]
+      },
+      {
+        id: 'kidney-safe-plant-protein-limits',
+        category: 'protein-optimization',
+        title: {
+          en: 'Plant Protein Limitations',
+          ne: 'वनस्पति प्रोटिनका सीमितताहरू'
+        },
+        description: {
+          en: 'Significantly limit dal, rajma, and other legumes due to high phosphorus and potassium. If consuming, soak overnight and use small portions (1/4 cup).',
+          ne: 'उच्च फस्फोरस र पोटासियमका कारण दाल, राजमा र अन्य दलहनहरू निकै सीमित गर्नुहोस्। खाने हो भने रातभर भिजाएर साना मात्रामा (१/४ कप) प्रयोग गर्नुहोस्।'
+        },
+        priority: 'medium',
+        suggestedFoods: ['dal-masoor', 'tofu'],
+        avoidFoods: ['almonds', 'seeds-mixed', 'dal-chana', 'rajma'],
+        cookingTips: [
+          { en: 'Soak legumes overnight and discard soaking water.', ne: 'दलहनहरू रातभर भिजाएर भिजाएको पानी फाल्नुहोस्।' },
+          { en: 'Limit portions to 1/4 cup cooked per meal.', ne: 'प्रत्येक भोजनमा पकाएको १/४ कप मात्र सीमित गर्नुहोस्।' },
+          { en: 'Choose animal proteins over plant proteins when possible.', ne: 'सम्भव भएसम्म वनस्पति प्रोटिनको सट्टा पशु प्रोटिन रोज्नुहोस्।' }
+        ],
+        educationalContent: [{
+          en: 'Plant proteins generally contain more phosphorus and potassium per gram of protein compared to animal sources.',
+          ne: 'वनस्पति प्रोटिनमा सामान्यतया पशु स्रोतको तुलनामा प्रति ग्राम प्रोटिनमा बढी फस्फोरस र पोटासियम हुन्छ।'
+        }]
       }
     ];
 
     return [...dynamicRecommendations, ...staticRecommendations];
-  }, [profile, todayIntake, isLoading]);
+  }, [
+    profile?.dailyLimits?.potassium,
+    profile?.dailyLimits?.phosphorus, 
+    profile?.dailyLimits?.fluid,
+    profile?.dailyLimits?.protein,
+    profile?.labValues?.length,
+    hemoglobinValue,
+    calciumValue,
+    vitaminDValue,
+    todayIntake.potassium, 
+    todayIntake.phosphorus, 
+    todayIntake.fluid, 
+    todayIntake.protein, 
+    isLoading
+  ]);
 
   return useMemo(() => ({
     foodLog,
