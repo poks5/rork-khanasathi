@@ -9,22 +9,182 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
   const [recommendations, setRecommendations] = useState<InsightRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadRecommendations();
+  // Get predefined recommendations
+  const getPredefinedRecommendations = useCallback((): InsightRecommendation[] => {
+    // Achar Safety: Pickle Use in CKD & Dialysis Patients
+    const acharSafetyInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
+      title: 'Achar Safety: Pickle Use in CKD & Dialysis Patients',
+      description: 'Safe pickle consumption guidelines and traditional condiment modifications for kidney patients',
+      category: 'safety-guidelines',
+      priority: 'high',
+      tips: [
+        {
+          title: 'Safe Achar Choices for Daily Use',
+          content: 'Choose fresh herb-based achars like coriander (धनिया) and mint (पुदिना) pickles. These are naturally low in potassium and sodium when prepared with minimal salt. Limit portions to 1-2 teaspoons per meal.',
+          foods: {
+            recommended: ['Coriander achar (धनिया अचार)', 'Mint achar (पुदिना अचार)', 'Fresh ginger pickle (अदुवा अचार)'],
+            avoid: ['Fermented achars', 'Commercial pickles', 'High-sodium preparations']
+          },
+          cookingTips: [
+            'Use minimal salt in preparation',
+            'Choose fresh over fermented',
+            'Limit to 1 tsp per meal',
+            'Rinse high-sodium achars before eating'
+          ],
+          priority: 'high',
+          evidence: 'Renal Nutrition Guidelines 2021'
+        },
+        {
+          title: 'High-Risk Achars to Completely Avoid',
+          content: 'Completely avoid tomato achar (गोलभेडा अचार), potato pickle (आलु अचार), and gundruk achar (गुन्द्रुक अचार). These contain extremely high levels of potassium and sodium that can be dangerous for kidney patients.',
+          foods: {
+            avoid: ['Tomato achar (गोलभेडा अचार)', 'Potato pickle (आलु अचार)', 'Gundruk achar (गुन्द्रुक अचार)', 'Fermented radish (मुला अचार)']
+          },
+          cookingTips: [
+            'No safe preparation method exists for these',
+            'Replace with herb-based alternatives',
+            'Educate family members about risks'
+          ],
+          priority: 'high',
+          evidence: 'KDOQI Clinical Guidelines'
+        },
+        {
+          title: 'Portion Control and Preparation Methods',
+          content: 'Even safe achars must be limited to very small portions. Use 1 teaspoon or less per meal. For commercial achars, rinse with water before eating to reduce sodium content.',
+          foods: {
+            recommended: ['Homemade low-salt achars', 'Rinsed commercial pickles (limited)', 'Fresh herb preparations'],
+            avoid: ['Large portions (>1 tsp)', 'Daily consumption', 'High-sodium commercial brands']
+          },
+          cookingTips: [
+            'Measure portions with teaspoon',
+            'Rinse before eating',
+            'Make fresh weekly batches',
+            'Use herbs instead of excess salt'
+          ],
+          priority: 'high',
+          evidence: 'Portion Control Guidelines for CKD'
+        },
+        {
+          title: 'Traditional Festival Food Modifications',
+          content: 'During festivals and special occasions, replace traditional high-risk achars with kidney-safe alternatives. Use fresh coriander chutney, mint sauce, or homemade low-salt preparations to maintain cultural food practices safely.',
+          foods: {
+            recommended: ['Fresh herb chutneys', 'Low-salt homemade preparations', 'Kidney-safe spice blends'],
+            avoid: ['Traditional high-salt festival achars', 'Community-prepared pickles', 'Unknown preparation methods']
+          },
+          cookingTips: [
+            'Plan alternatives for festivals',
+            'Teach family safe preparation',
+            'Create new traditions with safe foods',
+            'Focus on flavor through herbs and safe spices'
+          ],
+          priority: 'medium',
+          evidence: 'Cultural Adaptation Guidelines'
+        },
+        {
+          title: 'Understanding Achar Risk Factors',
+          content: 'Learn to identify high-risk ingredients: fermented vegetables increase potassium bioavailability, excess salt causes fluid retention, and high-potassium vegetables like tomatoes can cause dangerous heart rhythm problems.',
+          foods: {
+            recommended: ['Low-potassium vegetables for pickling', 'Fresh preparation methods', 'Reduced-salt recipes'],
+            avoid: ['Fermented preparations', 'High-potassium base vegetables', 'Unknown sodium content']
+          },
+          cookingTips: [
+            'Read ingredient labels carefully',
+            'Ask about preparation methods',
+            'Choose fresh over fermented',
+            'Monitor blood levels regularly'
+          ],
+          priority: 'medium',
+          evidence: 'Risk Assessment Guidelines'
+        }
+      ]
+    };
+
+    // Kidney-Safe Protein Sources
+    const proteinSafetyInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
+      title: 'Kidney-Safe Protein Sources (Low PO₄ & Low K)',
+      description: 'High-quality protein options that are low in both phosphorus and potassium',
+      category: 'protein-optimization',
+      priority: 'high',
+      tips: [
+        {
+          title: 'Best Protein Choices for Dialysis',
+          content: 'Egg whites are the gold standard - complete protein with minimal phosphorus and potassium. Fish and chicken breast are excellent secondary choices.',
+          foods: {
+            recommended: ['Egg whites (2-3 daily)', 'Fish (rohu, katla)', 'Chicken breast', 'Limited paneer']
+          },
+          priority: 'high',
+          evidence: 'KDOQI Protein Guidelines'
+        },
+        {
+          title: 'Portion Control for Protein',
+          content: 'Limit protein to 1.2g/kg body weight daily. For a 60kg person, this is about 70g protein total. Track portions carefully.',
+          priority: 'high',
+          evidence: 'ISRNM 2021'
+        },
+        {
+          title: 'Protein Timing with Phosphate Binders',
+          content: 'Always take phosphate binders with protein-containing meals. Time binders with the first bite of dal, meat, or egg dishes.',
+          priority: 'high',
+          evidence: 'Binder Compliance Guidelines'
+        },
+        {
+          title: 'Plant Protein Limitations',
+          content: 'Significantly limit dal, rajma, and other legumes due to high phosphorus and potassium. If consuming, soak overnight and use small portions (1/4 cup).',
+          foods: {
+            recommended: ['Very limited dal', 'Tofu (small amounts)'],
+            avoid: ['Large legume portions', 'Nuts', 'Seeds']
+          },
+          priority: 'medium'
+        }
+      ]
+    };
+
+    return [
+      {
+        ...acharSafetyInsight,
+        id: `insight-achar-safety-${Date.now()}`,
+        dateAdded: new Date().toISOString(),
+        isRead: false,
+        isBookmarked: false,
+      },
+      {
+        ...proteinSafetyInsight,
+        id: `insight-protein-safety-${Date.now() + 1}`,
+        dateAdded: new Date().toISOString(),
+        isRead: false,
+        isBookmarked: false,
+      }
+    ];
   }, []);
 
-  const loadRecommendations = async () => {
+  // Function to add predefined insights on first load
+  const addPredefinedInsightsOnFirstLoad = useCallback(async () => {
+    const predefinedRecommendations = getPredefinedRecommendations();
+    setRecommendations(predefinedRecommendations);
+    await saveRecommendations(predefinedRecommendations);
+    console.log('Added predefined insights on first load');
+  }, [getPredefinedRecommendations]);
+
+  const loadRecommendations = useCallback(async () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         setRecommendations(JSON.parse(stored));
+      } else {
+        // If no stored recommendations, add predefined ones
+        console.log('No stored recommendations found, adding predefined insights');
+        await addPredefinedInsightsOnFirstLoad();
       }
     } catch (error) {
       console.error('Error loading insight recommendations:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addPredefinedInsightsOnFirstLoad]);
+
+  useEffect(() => {
+    loadRecommendations();
+  }, [loadRecommendations]);
 
   const saveRecommendations = async (recs: InsightRecommendation[]) => {
     try {
@@ -165,140 +325,15 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
     });
   }, [recommendations]);
 
-  // Predefined insight recommendations from your message
+
+
+  // Function to manually add predefined insights (for the button)
   const addPredefinedInsights = useCallback(() => {
-    // Achar Safety: Pickle Use in CKD & Dialysis Patients
-    const acharSafetyInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
-      title: 'Achar Safety: Pickle Use in CKD & Dialysis Patients',
-      description: 'Safe pickle consumption guidelines and traditional condiment modifications for kidney patients',
-      category: 'safety-guidelines',
-      priority: 'high',
-      tips: [
-        {
-          title: 'Safe Achar Choices for Daily Use',
-          content: 'Choose fresh herb-based achars like coriander (धनिया) and mint (पुदिना) pickles. These are naturally low in potassium and sodium when prepared with minimal salt. Limit portions to 1-2 teaspoons per meal.',
-          foods: {
-            recommended: ['Coriander achar (धनिया अचार)', 'Mint achar (पुदिना अचार)', 'Fresh ginger pickle (अदुवा अचार)'],
-            avoid: ['Fermented achars', 'Commercial pickles', 'High-sodium preparations']
-          },
-          cookingTips: [
-            'Use minimal salt in preparation',
-            'Choose fresh over fermented',
-            'Limit to 1 tsp per meal',
-            'Rinse high-sodium achars before eating'
-          ],
-          priority: 'high',
-          evidence: 'Renal Nutrition Guidelines 2021'
-        },
-        {
-          title: 'High-Risk Achars to Completely Avoid',
-          content: 'Completely avoid tomato achar (गोलभेडा अचार), potato pickle (आलु अचार), and gundruk achar (गुन्द्रुक अचार). These contain extremely high levels of potassium and sodium that can be dangerous for kidney patients.',
-          foods: {
-            avoid: ['Tomato achar (गोलभेडा अचार)', 'Potato pickle (आलु अचार)', 'Gundruk achar (गुन्द्रुक अचार)', 'Fermented radish (मुला अचार)']
-          },
-          cookingTips: [
-            'No safe preparation method exists for these',
-            'Replace with herb-based alternatives',
-            'Educate family members about risks'
-          ],
-          priority: 'high',
-          evidence: 'KDOQI Clinical Guidelines'
-        },
-        {
-          title: 'Portion Control and Preparation Methods',
-          content: 'Even safe achars must be limited to very small portions. Use 1 teaspoon or less per meal. For commercial achars, rinse with water before eating to reduce sodium content.',
-          foods: {
-            recommended: ['Homemade low-salt achars', 'Rinsed commercial pickles (limited)', 'Fresh herb preparations'],
-            avoid: ['Large portions (>1 tsp)', 'Daily consumption', 'High-sodium commercial brands']
-          },
-          cookingTips: [
-            'Measure portions with teaspoon',
-            'Rinse before eating',
-            'Make fresh weekly batches',
-            'Use herbs instead of excess salt'
-          ],
-          priority: 'high',
-          evidence: 'Portion Control Guidelines for CKD'
-        },
-        {
-          title: 'Traditional Festival Food Modifications',
-          content: 'During festivals and special occasions, replace traditional high-risk achars with kidney-safe alternatives. Use fresh coriander chutney, mint sauce, or homemade low-salt preparations to maintain cultural food practices safely.',
-          foods: {
-            recommended: ['Fresh herb chutneys', 'Low-salt homemade preparations', 'Kidney-safe spice blends'],
-            avoid: ['Traditional high-salt festival achars', 'Community-prepared pickles', 'Unknown preparation methods']
-          },
-          cookingTips: [
-            'Plan alternatives for festivals',
-            'Teach family safe preparation',
-            'Create new traditions with safe foods',
-            'Focus on flavor through herbs and safe spices'
-          ],
-          priority: 'medium',
-          evidence: 'Cultural Adaptation Guidelines'
-        },
-        {
-          title: 'Understanding Achar Risk Factors',
-          content: 'Learn to identify high-risk ingredients: fermented vegetables increase potassium bioavailability, excess salt causes fluid retention, and high-potassium vegetables like tomatoes can cause dangerous heart rhythm problems.',
-          foods: {
-            recommended: ['Low-potassium vegetables for pickling', 'Fresh preparation methods', 'Reduced-salt recipes'],
-            avoid: ['Fermented preparations', 'High-potassium base vegetables', 'Unknown sodium content']
-          },
-          cookingTips: [
-            'Read ingredient labels carefully',
-            'Ask about preparation methods',
-            'Choose fresh over fermented',
-            'Monitor blood levels regularly'
-          ],
-          priority: 'medium',
-          evidence: 'Risk Assessment Guidelines'
-        }
-      ]
-    };
-
-    // Kidney-Safe Protein Sources
-    const proteinSafetyInsight: Omit<InsightRecommendation, 'id' | 'dateAdded' | 'isRead' | 'isBookmarked'> = {
-      title: 'Kidney-Safe Protein Sources (Low PO₄ & Low K)',
-      description: 'High-quality protein options that are low in both phosphorus and potassium',
-      category: 'protein-optimization',
-      priority: 'high',
-      tips: [
-        {
-          title: 'Best Protein Choices for Dialysis',
-          content: 'Egg whites are the gold standard - complete protein with minimal phosphorus and potassium. Fish and chicken breast are excellent secondary choices.',
-          foods: {
-            recommended: ['Egg whites (2-3 daily)', 'Fish (rohu, katla)', 'Chicken breast', 'Limited paneer']
-          },
-          priority: 'high',
-          evidence: 'KDOQI Protein Guidelines'
-        },
-        {
-          title: 'Portion Control for Protein',
-          content: 'Limit protein to 1.2g/kg body weight daily. For a 60kg person, this is about 70g protein total. Track portions carefully.',
-          priority: 'high',
-          evidence: 'ISRNM 2021'
-        },
-        {
-          title: 'Protein Timing with Phosphate Binders',
-          content: 'Always take phosphate binders with protein-containing meals. Time binders with the first bite of dal, meat, or egg dishes.',
-          priority: 'high',
-          evidence: 'Binder Compliance Guidelines'
-        },
-        {
-          title: 'Plant Protein Limitations',
-          content: 'Significantly limit dal, rajma, and other legumes due to high phosphorus and potassium. If consuming, soak overnight and use small portions (1/4 cup).',
-          foods: {
-            recommended: ['Very limited dal', 'Tofu (small amounts)'],
-            avoid: ['Large legume portions', 'Nuts', 'Seeds']
-          },
-          priority: 'medium'
-        }
-      ]
-    };
-
-    // Add both insights
-    addInsightRecommendation(acharSafetyInsight);
-    addInsightRecommendation(proteinSafetyInsight);
-  }, [addInsightRecommendation]);
+    const newInsights = getPredefinedRecommendations();
+    const updatedRecommendations = [...newInsights, ...recommendations];
+    setRecommendations(updatedRecommendations);
+    saveRecommendations(updatedRecommendations);
+  }, [recommendations, getPredefinedRecommendations]);
 
   return useMemo(() => ({
     recommendations,
