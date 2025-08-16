@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { ChevronDown, ChevronUp, AlertTriangle, Info, Droplet, Heart, Utensils, Activity } from 'lucide-react-native';
 import { NutritionRecommendation, RecommendationCategory } from '@/types/food';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { translateTexts } from '@/utils/translation';
 import { colors } from '@/constants/colors';
 import { getFoodById } from '@/data/foodDatabase';
 import { router } from 'expo-router';
@@ -14,6 +15,59 @@ interface RecommendationCardProps {
 export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation }) => {
   const { language, t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState<{
+    title: string;
+    description: string;
+    educationalContent: string[];
+    cookingTips: string[];
+  } | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  
+  const translateContent = useCallback(async () => {
+    if (isTranslating) return;
+    
+    setIsTranslating(true);
+    try {
+      const textsToTranslate: string[] = [
+        recommendation.title.en,
+        recommendation.description.en,
+        ...(recommendation.educationalContent?.map(content => content.en) || []),
+        ...(recommendation.cookingTips?.map(tip => tip.en) || [])
+      ];
+      
+      const translations = await translateTexts(textsToTranslate, 'ne');
+      
+      const educationalStartIndex = 2;
+      const cookingTipsStartIndex = educationalStartIndex + (recommendation.educationalContent?.length || 0);
+      
+      setTranslatedContent({
+        title: translations[0] || recommendation.title.en,
+        description: translations[1] || recommendation.description.en,
+        educationalContent: translations.slice(educationalStartIndex, cookingTipsStartIndex),
+        cookingTips: translations.slice(cookingTipsStartIndex)
+      });
+    } catch (error) {
+      console.error('Translation failed:', error);
+      // Fallback to original content
+      setTranslatedContent({
+        title: recommendation.title.ne || recommendation.title.en,
+        description: recommendation.description.ne || recommendation.description.en,
+        educationalContent: recommendation.educationalContent?.map(content => content.ne || content.en) || [],
+        cookingTips: recommendation.cookingTips?.map(tip => tip.ne || tip.en) || []
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [recommendation, isTranslating]);
+  
+  // Translate dynamic content when language changes
+  useEffect(() => {
+    if (language === 'ne') {
+      translateContent();
+    } else {
+      setTranslatedContent(null);
+    }
+  }, [language, translateContent]);
   
   const getCategoryIcon = (category: RecommendationCategory) => {
     switch (category) {
@@ -72,8 +126,17 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
     router.push({ pathname: '/food-details', params: { foodId } } as any);
   };
   
-  const title = language === 'en' ? recommendation.title.en : recommendation.title.ne;
-  const description = language === 'en' ? recommendation.description.en : recommendation.description.ne;
+  // Use translated content if available, otherwise fallback to original
+  const title = useMemo(() => {
+    if (language === 'en') return recommendation.title.en;
+    return translatedContent?.title || recommendation.title.ne || recommendation.title.en;
+  }, [language, translatedContent, recommendation.title]);
+  
+  const description = useMemo(() => {
+    if (language === 'en') return recommendation.description.en;
+    return translatedContent?.description || recommendation.description.ne || recommendation.description.en;
+  }, [language, translatedContent, recommendation.description]);
+  
   const categoryColor = getCategoryColor(recommendation.category);
   
   return (
@@ -171,28 +234,42 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
             {recommendation.educationalContent && recommendation.educationalContent.length > 0 && (
               <View style={styles.educationSection}>
                 <Text style={styles.sectionTitle}>{t('recommendationCard.educationalInfo')}</Text>
-                {recommendation.educationalContent.map((content, index) => (
-                  <View key={index} style={styles.educationItem}>
-                    <Info size={16} color={colors.primary} />
-                    <Text style={styles.educationText}>
-                      {language === 'en' ? content.en : content.ne}
-                    </Text>
-                  </View>
-                ))}
+                {recommendation.educationalContent.map((content, index) => {
+                  const text = language === 'en' 
+                    ? content.en 
+                    : translatedContent?.educationalContent[index] || content.ne || content.en;
+                  
+                  return (
+                    <View key={index} style={styles.educationItem}>
+                      <Info size={16} color={colors.primary} />
+                      <Text style={styles.educationText}>{text}</Text>
+                      {isTranslating && language === 'ne' && (
+                        <ActivityIndicator size="small" color={colors.primary} style={styles.loadingIndicator} />
+                      )}
+                    </View>
+                  );
+                })}
               </View>
             )}
             
             {recommendation.cookingTips && recommendation.cookingTips.length > 0 && (
               <View style={styles.educationSection}>
                 <Text style={styles.sectionTitle}>{t('recommendationCard.cookingTips')}</Text>
-                {recommendation.cookingTips.map((tip, index) => (
-                  <View key={index} style={styles.educationItem}>
-                    <Utensils size={16} color={colors.primary} />
-                    <Text style={styles.educationText}>
-                      {language === 'en' ? tip.en : tip.ne}
-                    </Text>
-                  </View>
-                ))}
+                {recommendation.cookingTips.map((tip, index) => {
+                  const text = language === 'en' 
+                    ? tip.en 
+                    : translatedContent?.cookingTips[index] || tip.ne || tip.en;
+                  
+                  return (
+                    <View key={index} style={styles.educationItem}>
+                      <Utensils size={16} color={colors.primary} />
+                      <Text style={styles.educationText}>{text}</Text>
+                      {isTranslating && language === 'ne' && (
+                        <ActivityIndicator size="small" color={colors.primary} style={styles.loadingIndicator} />
+                      )}
+                    </View>
+                  );
+                })}
               </View>
             )}
           </View>
@@ -329,5 +406,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     lineHeight: 18,
+  },
+  loadingIndicator: {
+    marginLeft: 8,
   },
 });

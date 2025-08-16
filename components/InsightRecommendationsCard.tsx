@@ -1,18 +1,33 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { BookmarkIcon, EyeOffIcon, TrashIcon, PlusIcon, FilterIcon, SearchIcon } from 'lucide-react-native';
 import { useInsights } from '@/providers/InsightsProvider';
 import { InsightRecommendation, RecommendationCategory, RecommendationPriority } from '@/types/food';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { translateTexts } from '@/utils/translation';
 
-// Utility function to parse bilingual content
-const parseBilingualText = (text: string, language: 'en' | 'ne'): string => {
-  if (!text.includes(' | ')) {
-    return text; // Return as-is if no bilingual separator
+// Enhanced utility function to parse bilingual content with AI translation fallback
+const parseBilingualText = (text: string, language: 'en' | 'ne', translatedTexts?: Map<string, string>): string => {
+  if (language === 'en') {
+    if (text.includes(' | ')) {
+      const [english] = text.split(' | ');
+      return english.trim();
+    }
+    return text;
   }
   
-  const [english, nepali] = text.split(' | ');
-  return language === 'en' ? english.trim() : nepali.trim();
+  // For Nepali, check AI translation first
+  if (translatedTexts?.has(text)) {
+    return translatedTexts.get(text)!;
+  }
+  
+  // Fallback to bilingual separator
+  if (text.includes(' | ')) {
+    const [, nepali] = text.split(' | ');
+    return nepali.trim();
+  }
+  
+  return text; // Return original if no translation available
 };
 
 interface InsightRecommendationsCardProps {
@@ -34,6 +49,10 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
     addPredefinedInsights
   } = useInsights();
   const { t, language } = useLanguage();
+  
+  // AI Translation state
+  const [translatedTexts, setTranslatedTexts] = useState<Map<string, string>>(new Map());
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory] = useState<RecommendationCategory | undefined>();
@@ -42,6 +61,96 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
   const [expandedRecommendation, setExpandedRecommendation] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  
+  const translateRecommendations = useCallback(async () => {
+    if (isTranslating || language === 'en') return;
+    
+    setIsTranslating(true);
+    try {
+      // Collect all texts that need translation
+      const textsToTranslate: string[] = [];
+      const textMap = new Map<string, number>();
+      
+      recommendations.forEach(rec => {
+        // Add title and description
+        if (!textMap.has(rec.title)) {
+          textMap.set(rec.title, textsToTranslate.length);
+          textsToTranslate.push(rec.title);
+        }
+        if (!textMap.has(rec.description)) {
+          textMap.set(rec.description, textsToTranslate.length);
+          textsToTranslate.push(rec.description);
+        }
+        
+        // Add tip content
+        rec.tips.forEach(tip => {
+          if (!textMap.has(tip.title)) {
+            textMap.set(tip.title, textsToTranslate.length);
+            textsToTranslate.push(tip.title);
+          }
+          if (!textMap.has(tip.content)) {
+            textMap.set(tip.content, textsToTranslate.length);
+            textsToTranslate.push(tip.content);
+          }
+          
+          // Add food items
+          tip.foods?.recommended?.forEach(food => {
+            if (!textMap.has(food)) {
+              textMap.set(food, textsToTranslate.length);
+              textsToTranslate.push(food);
+            }
+          });
+          
+          tip.foods?.avoid?.forEach(food => {
+            if (!textMap.has(food)) {
+              textMap.set(food, textsToTranslate.length);
+              textsToTranslate.push(food);
+            }
+          });
+          
+          // Add cooking tips
+          tip.cookingTips?.forEach(cookingTip => {
+            if (!textMap.has(cookingTip)) {
+              textMap.set(cookingTip, textsToTranslate.length);
+              textsToTranslate.push(cookingTip);
+            }
+          });
+          
+          // Add evidence
+          if (tip.evidence && !textMap.has(tip.evidence)) {
+            textMap.set(tip.evidence, textsToTranslate.length);
+            textsToTranslate.push(tip.evidence);
+          }
+        });
+      });
+      
+      if (textsToTranslate.length > 0) {
+        const translations = await translateTexts(textsToTranslate, 'ne');
+        const newTranslatedTexts = new Map<string, string>();
+        
+        textMap.forEach((index, originalText) => {
+          if (translations[index]) {
+            newTranslatedTexts.set(originalText, translations[index]);
+          }
+        });
+        
+        setTranslatedTexts(newTranslatedTexts);
+      }
+    } catch (error) {
+      console.error('Failed to translate recommendations:', error);
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [recommendations, isTranslating, language]);
+  
+  // Translate content when language changes to Nepali
+  useEffect(() => {
+    if (language === 'ne' && recommendations.length > 0) {
+      translateRecommendations();
+    } else if (language === 'en') {
+      setTranslatedTexts(new Map());
+    }
+  }, [language, recommendations, translateRecommendations]);
 
   const filteredRecommendations = useMemo(() => getFilteredRecommendations({
     category: selectedCategory,
@@ -123,11 +232,16 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
           <View style={styles.headerLeftContent}>
             <Text style={styles.categoryIcon}>{getCategoryIcon(recommendation.category)}</Text>
             <View style={styles.headerText}>
-              <Text style={[styles.title, !recommendation.isRead && styles.unreadTitle]} numberOfLines={2}>
-                {parseBilingualText(recommendation.title, language)}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={[styles.title, !recommendation.isRead && styles.unreadTitle]} numberOfLines={2}>
+                  {parseBilingualText(recommendation.title, language, translatedTexts)}
+                </Text>
+                {isTranslating && language === 'ne' && (
+                  <ActivityIndicator size="small" color="#3b82f6" style={{ marginLeft: 8 }} />
+                )}
+              </View>
               <Text style={styles.description} numberOfLines={isExpanded ? undefined : 2}>
-                {parseBilingualText(recommendation.description, language)}
+                {parseBilingualText(recommendation.description, language, translatedTexts)}
               </Text>
             </View>
           </View>
@@ -146,13 +260,13 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
             {recommendation.tips.map((tip, index) => (
               <View key={index} style={styles.tipCard}>
                 <View style={styles.tipHeader}>
-                  <Text style={styles.tipTitle}>{parseBilingualText(tip.title, language)}</Text>
+                  <Text style={styles.tipTitle}>{parseBilingualText(tip.title, language, translatedTexts)}</Text>
                   <View style={[styles.tipPriorityBadge, { backgroundColor: getPriorityColor(tip.priority) }]}>
                     <Text style={styles.tipPriorityText}>{tip.priority}</Text>
                   </View>
                 </View>
                 
-                <Text style={styles.tipContent}>{parseBilingualText(tip.content, language)}</Text>
+                <Text style={styles.tipContent}>{parseBilingualText(tip.content, language, translatedTexts)}</Text>
                 
                 {tip.foods && (
                   <View style={styles.foodsSection}>
@@ -160,7 +274,7 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
                       <View style={styles.foodCategory}>
                         <Text style={styles.foodCategoryTitle}>✅ {t('insights.recommendedLabel')}:</Text>
                         {tip.foods.recommended.map((food, foodIndex) => (
-                          <Text key={foodIndex} style={styles.foodItem}>• {parseBilingualText(food, language)}</Text>
+                          <Text key={foodIndex} style={styles.foodItem}>• {parseBilingualText(food, language, translatedTexts)}</Text>
                         ))}
                       </View>
                     )}
@@ -169,7 +283,7 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
                       <View style={styles.foodCategory}>
                         <Text style={styles.foodCategoryTitle}>❌ {t('insights.avoidLabel')}:</Text>
                         {tip.foods.avoid.map((food, foodIndex) => (
-                          <Text key={foodIndex} style={styles.foodItem}>• {parseBilingualText(food, language)}</Text>
+                          <Text key={foodIndex} style={styles.foodItem}>• {parseBilingualText(food, language, translatedTexts)}</Text>
                         ))}
                       </View>
                     )}
@@ -180,7 +294,7 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
                   <View style={styles.cookingTipsSection}>
                     <Text style={styles.cookingTipsTitle}>👨‍🍳 {t('insights.cookingTipsLabel')}:</Text>
                     {tip.cookingTips.map((cookingTip, cookingIndex) => (
-                      <Text key={cookingIndex} style={styles.cookingTip}>• {parseBilingualText(cookingTip, language)}</Text>
+                      <Text key={cookingIndex} style={styles.cookingTip}>• {parseBilingualText(cookingTip, language, translatedTexts)}</Text>
                     ))}
                   </View>
                 )}
@@ -188,7 +302,7 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
                 {tip.evidence && (
                   <View style={styles.evidenceSection}>
                     <Text style={styles.evidenceTitle}>📚 {t('insights.evidenceLabel')}:</Text>
-                    <Text style={styles.evidenceText}>{parseBilingualText(tip.evidence, language)}</Text>
+                    <Text style={styles.evidenceText}>{parseBilingualText(tip.evidence, language, translatedTexts)}</Text>
                   </View>
                 )}
               </View>
@@ -225,7 +339,7 @@ const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardPr
         )}
       </View>
     );
-  }, [expandedRecommendation, language, markAsRead, toggleBookmark, handleDeleteRecommendation, getPriorityColor, getCategoryIcon, t]);
+  }, [expandedRecommendation, language, markAsRead, toggleBookmark, handleDeleteRecommendation, getPriorityColor, getCategoryIcon, t, isTranslating, translatedTexts]);
 
   return (
     <View style={styles.container}>
