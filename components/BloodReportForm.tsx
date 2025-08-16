@@ -118,31 +118,36 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
   const updateLabValue = useCallback((field: keyof LabValues, value: string) => {
     console.log(`🔬 Updating ${field}: "${value}"`);
     
-    // Update input display value
-    setInputValues(prev => ({ ...prev, [field]: value }));
-    
-    // Parse and validate numeric value
-    if (value === '' || value === '.') {
-      // Clear the lab value
-      setLabValues(prev => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      });
-      return;
-    }
-    
-    // Validate decimal input
-    const decimalRegex = /^\d*\.?\d*$/;
+    // Allow empty string, single dot, or valid decimal numbers
+    const decimalRegex = /^$|^\d*\.?\d*$/;
     if (!decimalRegex.test(value)) {
       console.log(`❌ Invalid format for ${field}: "${value}"`);
       return;
     }
     
+    // Update input display value
+    setInputValues(prev => ({ ...prev, [field]: value }));
+    
+    // Handle empty or incomplete input
+    if (value === '' || value === '.' || value.endsWith('.')) {
+      if (value === '') {
+        // Clear the lab value completely
+        setLabValues(prev => {
+          const updated = { ...prev };
+          delete updated[field];
+          return updated;
+        });
+      }
+      return;
+    }
+    
+    // Parse and validate complete numeric value
     const numValue = parseFloat(value);
     if (!isNaN(numValue) && isFinite(numValue) && numValue >= 0) {
       setLabValues(prev => ({ ...prev, [field]: numValue }));
       console.log(`✅ Updated ${field} to:`, numValue);
+    } else {
+      console.log(`❌ Invalid numeric value for ${field}: "${value}"`);
     }
   }, []);
 
