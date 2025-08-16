@@ -35,6 +35,13 @@ function RootLayoutNav() {
           headerShown: false 
         }} 
       />
+      <Stack.Screen 
+        name="admin" 
+        options={{ 
+          presentation: "modal",
+          headerShown: false 
+        }} 
+      />
     </Stack>
   );
 }
