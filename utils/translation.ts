@@ -10,7 +10,82 @@ const getCacheKey = (text: string, targetLang: Language): string => {
   return `${text}|${targetLang}`;
 };
 
-// AI translation function
+// Medical terminology dictionary for better translations
+const medicalTerms: Record<string, string> = {
+  // Kidney health terms
+  'chronic kidney disease': 'दीर्घकालीन मृगौला रोग',
+  'dialysis': 'डायलिसिस',
+  'hemodialysis': 'हेमोडायलिसिस',
+  'peritoneal dialysis': 'पेरिटोनियल डायलिसिस',
+  'kidney function': 'मृगौला कार्य',
+  'renal diet': 'मृगौला आहार',
+  'nephrology': 'मृगौला विज्ञान',
+  'nephrologist': 'मृगौला विशेषज्ञ',
+  'kidney transplant': 'मृगौला प्रत्यारोपण',
+  'end stage renal disease': 'अन्तिम चरणको मृगौला रोग',
+  'glomerular filtration rate': 'ग्लोमेरुलर फिल्ट्रेशन दर',
+  'creatinine': 'क्रिएटिनिन',
+  'urea': 'युरिया',
+  'blood urea nitrogen': 'रगत युरिया नाइट्रोजन',
+  
+  // Nutrients
+  'potassium': 'पोटासियम',
+  'phosphorus': 'फस्फोरस',
+  'sodium': 'सोडियम',
+  'protein': 'प्रोटिन',
+  'calcium': 'क्याल्सियम',
+  'iron': 'फलाम',
+  'vitamin d': 'भिटामिन डी',
+  'vitamin b12': 'भिटामिन बी१२',
+  'folic acid': 'फोलिक एसिड',
+  'magnesium': 'म्याग्नेसियम',
+  'zinc': 'जिंक',
+  'fiber': 'फाइबर',
+  'carbohydrates': 'कार्बोहाइड्रेट',
+  'calories': 'क्यालोरी',
+  'fluid': 'तरल पदार्थ',
+  
+  // Medical conditions
+  'hyperkalemia': 'हाइपरकालेमिया',
+  'hyperphosphatemia': 'हाइपरफस्फेटेमिया',
+  'hypertension': 'उच्च रक्तचाप',
+  'diabetes': 'मधुमेह',
+  'anemia': 'रक्तअल्पता',
+  'bone disease': 'हड्डी रोग',
+  'cardiovascular disease': 'हृदय रोग',
+  'edema': 'सुन्निने',
+  'fluid overload': 'अतिरिक्त तरल पदार्थ',
+  'mineral bone disorder': 'खनिज हड्डी विकार',
+  
+  // Food preparation
+  'leaching': 'लीचिङ',
+  'double boiling': 'दोहोरो उमाल्ने',
+  'portion control': 'भाग नियन्त्रण',
+  'food restriction': 'खाना प्रतिबन्ध',
+  'dietary modification': 'आहार परिमार्जन',
+  'cooking method': 'पकाउने तरिका',
+  'preparation technique': 'तयारी प्रविधि',
+  
+  // Safety levels
+  'safe': 'सुरक्षित',
+  'caution': 'सावधानी',
+  'avoid': 'बच्नुहोस्',
+  'limit': 'सीमित गर्नुहोस्',
+  'restrict': 'प्रतिबन्ध गर्नुहोस्',
+  'moderate': 'मध्यम',
+  'high risk': 'उच्च जोखिम',
+  'low risk': 'कम जोखिम',
+  
+  // Common phrases
+  'consult your doctor': 'आफ्नो डाक्टरसँग सल्लाह गर्नुहोस्',
+  'follow medical advice': 'चिकित्सा सल्लाह पालना गर्नुहोस्',
+  'monitor intake': 'सेवन निगरानी गर्नुहोस्',
+  'reduce portion size': 'भागको आकार घटाउनुहोस्',
+  'increase water intake': 'पानीको सेवन बढाउनुहोस्',
+  'limit fluid intake': 'तरल पदार्थको सेवन सीमित गर्नुहोस्'
+};
+
+// Enhanced translation function with medical terminology
 export const translateText = async (text: string, targetLang: Language): Promise<string> => {
   if (!text || text.trim() === '') return text;
   
@@ -24,6 +99,24 @@ export const translateText = async (text: string, targetLang: Language): Promise
     return translationCache.get(cacheKey)!;
   }
   
+  // First, try to replace known medical terms
+  let processedText = text.toLowerCase();
+  let translatedText = text;
+  
+  for (const [english, nepali] of Object.entries(medicalTerms)) {
+    const regex = new RegExp(`\\b${english}\\b`, 'gi');
+    if (processedText.includes(english.toLowerCase())) {
+      translatedText = translatedText.replace(regex, nepali);
+    }
+  }
+  
+  // If significant translation occurred, cache and return
+  if (translatedText !== text) {
+    translationCache.set(cacheKey, translatedText);
+    return translatedText;
+  }
+  
+  // Otherwise, use AI translation with enhanced medical context
   try {
     const response = await fetch('https://toolkit.rork.com/text/llm/', {
       method: 'POST',
@@ -34,7 +127,17 @@ export const translateText = async (text: string, targetLang: Language): Promise
         messages: [
           {
             role: 'system',
-            content: `You are a professional medical translator specializing in kidney health and nutrition. Translate the following text from English to Nepali. Maintain medical accuracy and cultural appropriateness. Only return the translated text, nothing else.`
+            content: `You are a professional medical translator specializing in kidney health, dialysis, and nutrition for Nepali patients. 
+            
+Translate the following text from English to Nepali with these guidelines:
+            1. Use proper medical terminology in Nepali
+            2. Maintain cultural sensitivity for Nepali food habits
+            3. Keep medical accuracy paramount
+            4. Use simple, clear language that patients can understand
+            5. Preserve any specific measurements or numbers
+            6. For food names, use common Nepali names when available
+            
+Only return the translated text, nothing else.`
           },
           {
             role: 'user',
@@ -49,7 +152,7 @@ export const translateText = async (text: string, targetLang: Language): Promise
     }
     
     const data = await response.json();
-    const translatedText = data.completion.trim();
+    translatedText = data.completion.trim();
     
     // Cache the translation
     translationCache.set(cacheKey, translatedText);

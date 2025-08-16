@@ -1,4 +1,52 @@
 import { Food } from '@/types/food';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const ADMIN_FOODS_KEY = 'admin_foods_overrides';
+
+interface FoodOverride {
+  id: string;
+  image?: string;
+  nameEn?: string;
+  nameNe?: string;
+  safetyLevel?: 'safe' | 'caution' | 'avoid';
+  nutrients?: Partial<Food['nutrients']>;
+  preparationTips?: { en: string; ne: string }[];
+  medicalNotes?: { en: string; ne: string }[];
+}
+
+let foodOverrides: Record<string, FoodOverride> = {};
+
+// Load overrides from storage
+const loadFoodOverrides = async () => {
+  try {
+    const stored = await AsyncStorage.getItem(ADMIN_FOODS_KEY);
+    if (stored) {
+      foodOverrides = JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Failed to load food overrides:', error);
+  }
+};
+
+// Initialize overrides
+loadFoodOverrides();
+
+// Function to apply overrides to a food item
+const applyOverrides = (food: Food): Food => {
+  const override = foodOverrides[food.id];
+  if (!override) return food;
+
+  return {
+    ...food,
+    ...(override.image && { image: override.image }),
+    ...(override.nameEn && { nameEn: override.nameEn }),
+    ...(override.nameNe && { nameNe: override.nameNe }),
+    ...(override.safetyLevel && { safetyLevel: override.safetyLevel }),
+    ...(override.nutrients && { nutrients: { ...food.nutrients, ...override.nutrients } }),
+    ...(override.preparationTips && { preparationTips: override.preparationTips }),
+    ...(override.medicalNotes && { medicalNotes: override.medicalNotes }),
+  };
+};
 
 export const foodDatabase: Food[] = [
   // GRAINS & STARCHES
@@ -1724,20 +1772,20 @@ export const foodDatabase: Food[] = [
 
 // Helper functions for food database queries
 export function getFoodsByCategory(category: string): Food[] {
-  return foodDatabase.filter(food => food.category === category);
+  return foodDatabase.filter(food => food.category === category).map(applyOverrides);
 }
 
 export function getFoodsBySubcategory(subcategory: string): Food[] {
-  return foodDatabase.filter(food => food.subcategory === subcategory);
+  return foodDatabase.filter(food => food.subcategory === subcategory).map(applyOverrides);
 }
 
 export function getFoodsBySafetyLevel(safetyLevel: 'safe' | 'caution' | 'avoid'): Food[] {
-  return foodDatabase.filter(food => food.safetyLevel === safetyLevel);
+  return foodDatabase.map(applyOverrides).filter(food => food.safetyLevel === safetyLevel);
 }
 
 export function searchFoods(query: string, language: 'en' | 'ne' = 'en'): Food[] {
   const searchTerm = query.toLowerCase();
-  return foodDatabase.filter(food => {
+  return foodDatabase.map(applyOverrides).filter(food => {
     const nameMatch = language === 'en' 
       ? food.nameEn.toLowerCase().includes(searchTerm)
       : food.nameNe.includes(searchTerm);
@@ -1753,7 +1801,8 @@ export function searchFoods(query: string, language: 'en' | 'ne' = 'en'): Food[]
 }
 
 export function getFoodById(id: string): Food | undefined {
-  return foodDatabase.find(food => food.id === id);
+  const food = foodDatabase.find(food => food.id === id);
+  return food ? applyOverrides(food) : undefined;
 }
 
 // Nutritional analysis helpers
@@ -1788,4 +1837,14 @@ export function isHighPhosphorus(food: Food): boolean {
 export function isHighSodium(food: Food): boolean {
   const per100g = calculateNutrientsPer100g(food);
   return per100g.sodium > 300;
+}
+
+// Function to refresh overrides (call this when admin makes changes)
+export const refreshFoodOverrides = async () => {
+  await loadFoodOverrides();
+};
+
+// Get all foods with overrides applied
+export function getAllFoods(): Food[] {
+  return foodDatabase.map(applyOverrides);
 }
