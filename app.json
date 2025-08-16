@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.nepali-ckd-nutrition-app"
+      "bundleIdentifier": "app.rork.khanasathi-app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.nepali-ckd-nutrition-app"
+      "package": "app.rork.khanasathi-app"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
