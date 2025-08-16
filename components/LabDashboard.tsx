@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
 import { colors } from '@/constants/colors';
 import { useBloodReports } from '@/providers/BloodReportProvider';
+import { useInsights } from '@/providers/InsightsProvider';
 import { BloodReportForm } from './BloodReportForm';
-import { Plus, AlertTriangle, TrendingUp, Activity, FileText } from 'lucide-react-native';
+import { Plus, AlertTriangle, TrendingUp, Activity, FileText, Trash2, RefreshCw } from 'lucide-react-native';
 
 export const LabDashboard: React.FC = () => {
-  const { reports, latestReport, criticalAlerts, recommendationsByPriority, isLoading } = useBloodReports();
+  const { reports, latestReport, criticalAlerts, recommendationsByPriority, isLoading, clearAllReports } = useBloodReports();
+  const { recommendations, addPredefinedInsights } = useInsights();
   const [showForm, setShowForm] = useState(false);
+  const [showClearOptions, setShowClearOptions] = useState(false);
 
   if (isLoading) {
     return (
@@ -54,6 +57,132 @@ export const LabDashboard: React.FC = () => {
       )}
     </View>
   );
+
+  const handleClearAllData = () => {
+    Alert.alert(
+      'Clear All Lab Data',
+      'This will permanently delete all blood reports and lab recommendations. This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearAllReports();
+              console.log('✅ All lab data cleared successfully');
+              Alert.alert('Success', 'All lab data has been cleared successfully.');
+            } catch (error) {
+              console.error('❌ Error clearing lab data:', error);
+              Alert.alert('Error', 'Failed to clear lab data. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleClearReports = () => {
+    Alert.alert(
+      'Clear Blood Reports',
+      `This will delete all ${reports.length} blood reports. Recommendations will remain.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear Reports',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearAllReports();
+              console.log('✅ Blood reports cleared successfully');
+              Alert.alert('Success', 'Blood reports have been cleared.');
+            } catch (error) {
+              console.error('❌ Error clearing reports:', error);
+              Alert.alert('Error', 'Failed to clear reports. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleRefreshRecommendations = () => {
+    Alert.alert(
+      'Refresh Recommendations',
+      'This will add fresh predefined recommendations to your insights.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Refresh',
+          onPress: () => {
+            try {
+              addPredefinedInsights();
+              console.log('✅ Recommendations refreshed successfully');
+              Alert.alert('Success', 'Fresh recommendations have been added.');
+            } catch (error) {
+              console.error('❌ Error refreshing recommendations:', error);
+              Alert.alert('Error', 'Failed to refresh recommendations.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderClearOptions = () => {
+    if (!showClearOptions) return null;
+
+    return (
+      <View style={styles.clearOptionsCard}>
+        <Text style={styles.clearOptionsTitle}>Data Management</Text>
+        <Text style={styles.clearOptionsSubtitle}>
+          Current Data: {reports.length} reports, {recommendations.length} recommendations
+        </Text>
+        
+        <View style={styles.clearButtonsContainer}>
+          <TouchableOpacity 
+            style={[styles.clearButton, styles.clearReportsButton]} 
+            onPress={handleClearReports}
+          >
+            <Trash2 size={16} color={colors.white} />
+            <Text style={styles.clearButtonText}>Clear Reports Only</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.clearButton, styles.refreshButton]} 
+            onPress={handleRefreshRecommendations}
+          >
+            <RefreshCw size={16} color={colors.white} />
+            <Text style={styles.clearButtonText}>Refresh Insights</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.clearButton, styles.clearAllButton]} 
+            onPress={handleClearAllData}
+          >
+            <Trash2 size={16} color={colors.white} />
+            <Text style={styles.clearButtonText}>Clear All Data</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <TouchableOpacity 
+          style={styles.cancelButton}
+          onPress={() => setShowClearOptions(false)}
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const renderLatestReport = () => {
     if (!latestReport) {
@@ -107,15 +236,24 @@ export const LabDashboard: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Lab Dashboard</Text>
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={() => setShowForm(true)}
-        >
-          <Plus size={24} color={colors.white} />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.clearDataButton} 
+            onPress={() => setShowClearOptions(!showClearOptions)}
+          >
+            <Trash2 size={20} color={colors.error} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => setShowForm(true)}
+          >
+            <Plus size={24} color={colors.white} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {renderClearOptions()}
         {renderLatestReport()}
 
         {criticalAlerts.length > 0 && (
@@ -173,6 +311,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  clearDataButton: {
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: colors.error,
   },
   title: {
     fontSize: 24,
@@ -366,5 +516,63 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.primary,
     fontStyle: 'italic' as const,
+  },
+  clearOptionsCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.error,
+    gap: 16,
+  },
+  clearOptionsTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: colors.error,
+    textAlign: 'center',
+  },
+  clearOptionsSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  clearButtonsContainer: {
+    gap: 12,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  clearReportsButton: {
+    backgroundColor: colors.warning,
+  },
+  refreshButton: {
+    backgroundColor: colors.primary,
+  },
+  clearAllButton: {
+    backgroundColor: colors.error,
+  },
+  clearButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.white,
+  },
+  cancelButton: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.textSecondary,
   },
 });
