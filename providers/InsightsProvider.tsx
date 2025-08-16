@@ -464,35 +464,56 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
 
   // Convert insight recommendations to nutrition recommendations for integration
   const convertToNutritionRecommendations = useCallback((): NutritionRecommendation[] => {
-    return recommendations.flatMap(insight => 
-      insight.tips.map((tip, index) => ({
-        id: `${insight.id}-tip-${index}`,
-        category: insight.category,
-        title: {
-          en: tip.title,
-          ne: tip.title // For now, using English for both
-        },
-        description: {
-          en: tip.content,
-          ne: tip.content
-        },
-        priority: tip.priority,
-        suggestedFoods: tip.foods?.recommended || [],
-        avoidFoods: tip.foods?.avoid || [],
-        cookingTips: tip.cookingTips?.map(cookingTip => ({
-          en: cookingTip,
-          ne: cookingTip
-        })) || [],
-        educationalContent: tip.evidence ? [{
-          en: tip.evidence,
-          ne: tip.evidence
-        }] : [],
-        source: 'insights' as const,
-        dateAdded: insight.dateAdded,
-        isRead: insight.isRead,
-        isBookmarked: insight.isBookmarked,
-        userNotes: insight.userNotes
-      }))
+    const hasDevanagari = (str: string) => /[\u0900-\u097F]/.test(str);
+    const splitBilingual = (str: string): { en: string; ne: string } => {
+      if (!str) return { en: '', ne: '' };
+      const pipeIdx = str.indexOf('|');
+      if (pipeIdx !== -1) {
+        const enPart = str.slice(0, pipeIdx).trim();
+        const nePart = str.slice(pipeIdx + 1).trim();
+        return { en: enPart, ne: nePart };
+      }
+      if (hasDevanagari(str)) {
+        const firstNepaliIdx = str.search(/[\u0900-\u097F]/);
+        if (firstNepaliIdx > 0) {
+          const enPart = str.slice(0, firstNepaliIdx).trim();
+          const nePart = str.slice(firstNepaliIdx).trim();
+          if (enPart.length > 0 && nePart.length > 0) return { en: enPart, ne: nePart };
+        }
+      }
+      return { en: str, ne: str };
+    };
+
+    return recommendations.flatMap(insight =>
+      insight.tips.map((tip, index) => {
+        const titleSplit = splitBilingual(tip.title);
+        const contentSplit = splitBilingual(tip.content);
+        const evidenceSplit = tip.evidence ? splitBilingual(tip.evidence) : undefined;
+        const cookingTipsSplit = (tip.cookingTips ?? []).map(ct => splitBilingual(ct));
+
+        return {
+          id: `${insight.id}-tip-${index}`,
+          category: insight.category,
+          title: {
+            en: titleSplit.en,
+            ne: titleSplit.ne,
+          },
+          description: {
+            en: contentSplit.en,
+            ne: contentSplit.ne,
+          },
+          priority: tip.priority,
+          suggestedFoods: tip.foods?.recommended ?? [],
+          avoidFoods: tip.foods?.avoid ?? [],
+          cookingTips: cookingTipsSplit.map(ct => ({ en: ct.en, ne: ct.ne })),
+          educationalContent: evidenceSplit ? [{ en: evidenceSplit.en, ne: evidenceSplit.ne }] : [],
+          source: 'insights' as const,
+          dateAdded: insight.dateAdded,
+          isRead: insight.isRead,
+          isBookmarked: insight.isBookmarked,
+          userNotes: insight.userNotes,
+        };
+      })
     );
   }, [recommendations]);
 
