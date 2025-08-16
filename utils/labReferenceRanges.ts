@@ -61,10 +61,20 @@ export const DIALYSIS_REFERENCE_RANGES: Record<keyof LabValues, ReferenceRange> 
 };
 
 export const getAlertSeverity = (value: number, range: ReferenceRange): 'mild' | 'moderate' | 'severe' => {
-  const deviation = Math.max(
-    Math.abs(value - range.min) / range.min,
-    Math.abs(value - range.max) / range.max
-  );
+  let deviation = 0;
+  
+  if (value < range.min) {
+    // Calculate how far below the minimum
+    deviation = (range.min - value) / range.min;
+  } else if (value > range.max) {
+    // Calculate how far above the maximum
+    deviation = (value - range.max) / range.max;
+  } else {
+    // Value is within normal range
+    return 'mild';
+  }
+  
+  console.log(`📊 Severity calculation for value ${value} (range: ${range.min}-${range.max}): deviation = ${deviation.toFixed(3)}`);
   
   if (deviation > 0.5) return 'severe';
   if (deviation > 0.25) return 'moderate';

@@ -1,5 +1,5 @@
 import { LabValues, BloodReportAnalysis, LabAlert, DietaryRecommendation, TrendAnalysis } from '@/types/bloodReport';
-import { DIALYSIS_REFERENCE_RANGES, getAlertSeverity, getCriticalThresholds, getParameterInfo } from './labReferenceRanges';
+import { DIALYSIS_REFERENCE_RANGES, getAlertSeverity, getCriticalThresholds } from './labReferenceRanges';
 
 export interface LabIntegrationConfig {
   patientType: 'hemodialysis' | 'peritoneal' | 'ckd';
@@ -42,11 +42,20 @@ export class LabIntegrationEngine {
     Object.entries(labValues).forEach(([parameter, value]) => {
       console.log(`🧪 Checking ${parameter}: ${value}`);
       
-      if (value !== undefined && value !== null && !isNaN(Number(value)) && DIALYSIS_REFERENCE_RANGES[parameter as keyof LabValues]) {
+      if (value !== undefined && value !== null && !isNaN(Number(value))) {
+        const paramKey = parameter as keyof LabValues;
+        const range = DIALYSIS_REFERENCE_RANGES[paramKey];
+        
+        if (!range) {
+          console.log(`⚠️ No reference range found for ${parameter}`);
+          return;
+        }
+        
         const numValue = Number(value);
-        const range = DIALYSIS_REFERENCE_RANGES[parameter as keyof LabValues];
         let status: 'low' | 'high' | 'normal' = 'normal';
 
+        console.log(`📊 Evaluating ${parameter}: ${numValue} against range [${range.min}, ${range.max}]`);
+        
         if (numValue < range.min) {
           status = 'low';
           console.log(`⚠️ ${parameter} is LOW: ${numValue} < ${range.min}`);
@@ -78,7 +87,7 @@ export class LabIntegrationEngine {
           console.log(`🚨 Added alert for ${parameter}: ${status} (${severity}, ${urgency})`);
         }
       } else if (value !== undefined && value !== null) {
-        console.log(`⚠️ Skipping ${parameter}: invalid value or no reference range`);
+        console.log(`⚠️ Skipping ${parameter}: invalid value (${value})`);
       }
     });
 
@@ -262,41 +271,146 @@ export class LabIntegrationEngine {
   }
 
   private getClinicalSignificance(parameter: string, status: 'low' | 'high', value: number): string {
-    const significance: Record<string, Record<'low' | 'high', string>> = {
+    const significance: Record<string, Record<'low' | 'high', (value: number) => string>> = {
       potassium: {
-        high: value > 6.0 ? 'Life-threatening - risk of cardiac arrest' : 'Significant - cardiovascular risk',
-        low: value < 3.0 ? 'Dangerous - muscle paralysis risk' : 'Concerning - monitor closely'
+        high: (v) => v >= 6.0 ? 'Life-threatening - risk of cardiac arrest' : v > 5.5 ? 'Significant - cardiovascular risk' : 'Moderate - monitor closely',
+        low: (v) => v <= 3.0 ? 'Dangerous - muscle paralysis risk' : v < 3.5 ? 'Concerning - monitor closely' : 'Mild deviation'
       },
       phosphorus: {
-        high: value > 7.0 ? 'Severe - accelerated bone disease' : 'Moderate - long-term complications',
-        low: value < 2.5 ? 'Significant - bone disease risk' : 'Mild - nutritional concern'
+        high: (v) => v >= 7.0 ? 'Severe - accelerated bone disease' : v > 5.5 ? 'Moderate - long-term complications' : 'Mild elevation',
+        low: (v) => v <= 2.5 ? 'Significant - bone disease risk' : v < 3.5 ? 'Mild - nutritional concern' : 'Minor deviation'
+      },
+      calcium: {
+        high: (v) => v >= 11.0 ? 'Severe - cardiac and neurological risk' : v > 10.5 ? 'Moderate - monitor symptoms' : 'Mild elevation',
+        low: (v) => v <= 7.5 ? 'Severe - tetany and seizure risk' : v < 8.5 ? 'Moderate - muscle cramps possible' : 'Mild deficiency'
+      },
+      albumin: {
+        high: (v) => 'Possible dehydration - check fluid status',
+        low: (v) => v <= 3.0 ? 'Severe malnutrition - increased mortality risk' : v < 3.5 ? 'Moderate malnutrition - intervention needed' : 'Mild protein deficiency'
+      },
+      hemoglobin: {
+        high: (v) => 'Possible hemoconcentration or polycythemia',
+        low: (v) => v <= 9.0 ? 'Severe anemia - transfusion may be needed' : v < 11.0 ? 'Moderate anemia - treatment required' : 'Mild anemia'
+      },
+      sodium: {
+        high: (v) => v >= 150 ? 'Severe hypernatremia - neurological risk' : v > 145 ? 'Moderate hypernatremia - fluid restriction needed' : 'Mild elevation',
+        low: (v) => v <= 130 ? 'Severe hyponatremia - seizure risk' : v < 136 ? 'Moderate hyponatremia - monitor symptoms' : 'Mild reduction'
+      },
+      iPTH: {
+        high: (v) => v >= 500 ? 'Severe hyperparathyroidism - bone disease acceleration' : v > 300 ? 'Moderate elevation - optimize treatment' : 'Mild elevation',
+        low: (v) => v <= 100 ? 'Severe suppression - adynamic bone disease risk' : v < 150 ? 'Moderate suppression - monitor bone turnover' : 'Mild suppression'
+      },
+      urea: {
+        high: (v) => v >= 100 ? 'Severe uremia - inadequate dialysis' : v > 60 ? 'Moderate elevation - review dialysis adequacy' : 'Mild elevation',
+        low: (v) => 'Possible over-dialysis or malnutrition'
+      },
+      creatinine: {
+        high: (v) => v >= 15 ? 'Severe elevation - inadequate dialysis' : v > 12 ? 'Moderate elevation - review treatment' : 'Mild elevation',
+        low: (v) => 'Possible muscle wasting or over-dialysis'
       }
     };
 
-    return significance[parameter]?.[status] || 'Requires clinical evaluation';
+    const paramSignificance = significance[parameter];
+    if (paramSignificance && paramSignificance[status]) {
+      return paramSignificance[status](value);
+    }
+    
+    return `${parameter} level is ${status} and requires clinical evaluation`;
   }
 
   private getUrgencyLevel(parameter: string, status: 'low' | 'high', value: number): 'routine' | 'urgent' | 'critical' {
     console.log(`🔍 Assessing urgency for ${parameter}: ${value} (${status})`);
     
-    if (parameter === 'potassium') {
-      if ((status === 'high' && value > 6.0) || (status === 'low' && value < 3.0)) {
-        console.log('🚨 CRITICAL potassium level');
-        return 'critical';
-      } else if ((status === 'high' && value > 5.5) || (status === 'low' && value < 3.5)) {
-        console.log('⚠️ URGENT potassium level');
-        return 'urgent';
-      }
-    }
-
-    if (parameter === 'phosphorus' && status === 'high' && value > 7.0) {
-      console.log('⚠️ URGENT phosphorus level');
-      return 'urgent';
-    }
-
-    if (parameter === 'albumin' && status === 'low' && value < 3.0) {
-      console.log('⚠️ URGENT albumin level');
-      return 'urgent';
+    // Critical thresholds that require immediate attention
+    getCriticalThresholds(); // Available for future use
+    
+    switch (parameter) {
+      case 'potassium':
+        if (status === 'high' && value >= 6.0) {
+          console.log('🚨 CRITICAL potassium level - cardiac risk');
+          return 'critical';
+        }
+        if (status === 'low' && value <= 3.0) {
+          console.log('🚨 CRITICAL potassium level - muscle paralysis risk');
+          return 'critical';
+        }
+        if ((status === 'high' && value > 5.5) || (status === 'low' && value < 3.5)) {
+          console.log('⚠️ URGENT potassium level');
+          return 'urgent';
+        }
+        break;
+        
+      case 'phosphorus':
+        if (status === 'high' && value >= 7.0) {
+          console.log('⚠️ URGENT phosphorus level - bone disease risk');
+          return 'urgent';
+        }
+        if (status === 'low' && value <= 2.5) {
+          console.log('⚠️ URGENT phosphorus level - bone weakness risk');
+          return 'urgent';
+        }
+        break;
+        
+      case 'calcium':
+        if (status === 'high' && value >= 11.0) {
+          console.log('⚠️ URGENT calcium level - cardiac risk');
+          return 'urgent';
+        }
+        if (status === 'low' && value <= 7.5) {
+          console.log('⚠️ URGENT calcium level - tetany risk');
+          return 'urgent';
+        }
+        break;
+        
+      case 'albumin':
+        if (status === 'low' && value <= 3.0) {
+          console.log('⚠️ URGENT albumin level - malnutrition risk');
+          return 'urgent';
+        }
+        break;
+        
+      case 'hemoglobin':
+        if (status === 'low' && value <= 9.0) {
+          console.log('⚠️ URGENT hemoglobin level - severe anemia');
+          return 'urgent';
+        }
+        break;
+        
+      case 'iPTH':
+        if (status === 'high' && value >= 500) {
+          console.log('⚠️ URGENT iPTH level - severe bone disease risk');
+          return 'urgent';
+        }
+        if (status === 'low' && value <= 100) {
+          console.log('⚠️ URGENT iPTH level - adynamic bone disease risk');
+          return 'urgent';
+        }
+        break;
+        
+      case 'sodium':
+        if (status === 'high' && value >= 150) {
+          console.log('⚠️ URGENT sodium level - hypernatremia');
+          return 'urgent';
+        }
+        if (status === 'low' && value <= 130) {
+          console.log('⚠️ URGENT sodium level - hyponatremia');
+          return 'urgent';
+        }
+        break;
+        
+      case 'urea':
+        if (status === 'high' && value >= 100) {
+          console.log('⚠️ URGENT urea level - inadequate dialysis');
+          return 'urgent';
+        }
+        break;
+        
+      case 'creatinine':
+        if (status === 'high' && value >= 15) {
+          console.log('⚠️ URGENT creatinine level - inadequate dialysis');
+          return 'urgent';
+        }
+        break;
     }
 
     console.log('🟢 ROUTINE level for', parameter);
