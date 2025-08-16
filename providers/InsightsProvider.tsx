@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { InsightRecommendation, NutritionRecommendation, RecommendationCategory, RecommendationPriority } from '@/types/food';
 
-const STORAGE_KEY = 'insightRecommendations_v3_bilingual';
+const STORAGE_KEY = 'insightRecommendations_v4_complete_bilingual';
 
 export const [InsightsProvider, useInsights] = createContextHook(() => {
   const [recommendations, setRecommendations] = useState<InsightRecommendation[]>([]);
@@ -49,52 +49,52 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
           evidence: 'KDOQI Clinical Guidelines | KDOQI क्लिनिकल दिशानिर्देशहरू'
         },
         {
-          title: 'Portion Control and Preparation Methods',
-          content: 'Even safe achars must be limited to very small portions. Use 1 teaspoon or less per meal. For commercial achars, rinse with water before eating to reduce sodium content.',
+          title: 'Portion Control and Preparation Methods | भाग नियन्त्रण र तयारी विधिहरू',
+          content: 'Even safe achars must be limited to very small portions. Use 1 teaspoon or less per meal. For commercial achars, rinse with water before eating to reduce sodium content. | सुरक्षित अचारहरू पनि धेरै सानो भागमा सीमित गर्नुपर्छ। प्रति खानामा १ चम्चा वा कम प्रयोग गर्नुहोस्। व्यावसायिक अचारका लागि, सोडियम कम गर्न खानु अघि पानीले धुनुहोस्।',
           foods: {
-            recommended: ['Homemade low-salt achars', 'Rinsed commercial pickles (limited)', 'Fresh herb preparations'],
-            avoid: ['Large portions (>1 tsp)', 'Daily consumption', 'High-sodium commercial brands']
+            recommended: ['Homemade low-salt achars | घरमा बनाइएको कम नुनको अचार', 'Rinsed commercial pickles (limited) | धोएको व्यावसायिक अचार (सीमित)', 'Fresh herb preparations | ताजा जडिबुटी तयारी'],
+            avoid: ['Large portions (>1 tsp) | ठूलो भाग (१ चम्चा भन्दा बढी)', 'Daily consumption | दैनिक सेवन', 'High-sodium commercial brands | उच्च सोडियम व्यावसायिक ब्रान्डहरू']
           },
           cookingTips: [
-            'Measure portions with teaspoon',
-            'Rinse before eating',
-            'Make fresh weekly batches',
-            'Use herbs instead of excess salt'
+            'Measure portions with teaspoon | चम्चाले भाग नाप्नुहोस्',
+            'Rinse before eating | खानु अघि धुनुहोस्',
+            'Make fresh weekly batches | साप्ताहिक ताजा ब्याच बनाउनुहोस्',
+            'Use herbs instead of excess salt | अतिरिक्त नुनको सट्टा जडिबुटी प्रयोग गर्नुहोस्'
           ],
           priority: 'high',
-          evidence: 'Portion Control Guidelines for CKD'
+          evidence: 'Portion Control Guidelines for CKD | CKD का लागि भाग नियन्त्रण दिशानिर्देशहरू'
         },
         {
-          title: 'Traditional Festival Food Modifications',
-          content: 'During festivals and special occasions, replace traditional high-risk achars with kidney-safe alternatives. Use fresh coriander chutney, mint sauce, or homemade low-salt preparations to maintain cultural food practices safely.',
+          title: 'Traditional Festival Food Modifications | परम्परागत चाडपर्वका खानाको परिमार्जन',
+          content: 'During festivals and special occasions, replace traditional high-risk achars with kidney-safe alternatives. Use fresh coriander chutney, mint sauce, or homemade low-salt preparations to maintain cultural food practices safely. | चाडपर्व र विशेष अवसरहरूमा, परम्परागत उच्च जोखिमका अचारहरूलाई मृगौला-सुरक्षित विकल्पहरूसँग बदल्नुहोस्। सांस्कृतिक खाना अभ्यासहरू सुरक्षित रूपमा कायम राख्न ताजा धनिया चटनी, पुदिना सस, वा घरमा बनाइएको कम नुनको तयारी प्रयोग गर्नुहोस्।',
           foods: {
-            recommended: ['Fresh herb chutneys', 'Low-salt homemade preparations', 'Kidney-safe spice blends'],
-            avoid: ['Traditional high-salt festival achars', 'Community-prepared pickles', 'Unknown preparation methods']
+            recommended: ['Fresh herb chutneys | ताजा जडिबुटी चटनी', 'Low-salt homemade preparations | कम नुन घरमा बनाइएको तयारी', 'Kidney-safe spice blends | मृगौला-सुरक्षित मसला मिश्रण'],
+            avoid: ['Traditional high-salt festival achars | परम्परागत उच्च नुन चाडपर्वका अचार', 'Community-prepared pickles | समुदायिक तयार अचार', 'Unknown preparation methods | अज्ञात तयारी विधिहरू']
           },
           cookingTips: [
-            'Plan alternatives for festivals',
-            'Teach family safe preparation',
-            'Create new traditions with safe foods',
-            'Focus on flavor through herbs and safe spices'
+            'Plan alternatives for festivals | चाडपर्वका लागि विकल्पहरू योजना बनाउनुहोस्',
+            'Teach family safe preparation | परिवारलाई सुरक्षित तयारी सिकाउनुहोस्',
+            'Create new traditions with safe foods | सुरक्षित खानासँग नयाँ परम्पराहरू सिर्जना गर्नुहोस्',
+            'Focus on flavor through herbs and safe spices | जडिबुटी र सुरक्षित मसलाहरू मार्फत स्वादमा ध्यान दिनुहोस्'
           ],
           priority: 'medium',
-          evidence: 'Cultural Adaptation Guidelines'
+          evidence: 'Cultural Adaptation Guidelines | सांस्कृतिक अनुकूलन दिशानिर्देशहरू'
         },
         {
-          title: 'Understanding Achar Risk Factors',
-          content: 'Learn to identify high-risk ingredients: fermented vegetables increase potassium bioavailability, excess salt causes fluid retention, and high-potassium vegetables like tomatoes can cause dangerous heart rhythm problems.',
+          title: 'Understanding Achar Risk Factors | अचारका जोखिम कारकहरू बुझ्ने',
+          content: 'Learn to identify high-risk ingredients: fermented vegetables increase potassium bioavailability, excess salt causes fluid retention, and high-potassium vegetables like tomatoes can cause dangerous heart rhythm problems. | उच्च जोखिमका सामग्रीहरू पहिचान गर्न सिक्नुहोस्: किण्वित तरकारीहरूले पोटासियम जैविक उपलब्धता बढाउँछ, अतिरिक्त नुनले तरल पदार्थ रोक्छ, र गोलभेडा जस्ता उच्च पोटासियम तरकारीहरूले खतरनाक हृदयको लय समस्याहरू निम्त्याउन सक्छ।',
           foods: {
-            recommended: ['Low-potassium vegetables for pickling', 'Fresh preparation methods', 'Reduced-salt recipes'],
-            avoid: ['Fermented preparations', 'High-potassium base vegetables', 'Unknown sodium content']
+            recommended: ['Low-potassium vegetables for pickling | अचारका लागि कम पोटासियम तरकारी', 'Fresh preparation methods | ताजा तयारी विधिहरू', 'Reduced-salt recipes | कम नुनका रेसिपीहरू'],
+            avoid: ['Fermented preparations | किण्वित तयारी', 'High-potassium base vegetables | उच्च पोटासियम आधार तरकारी', 'Unknown sodium content | अज्ञात सोडियम सामग्री']
           },
           cookingTips: [
-            'Read ingredient labels carefully',
-            'Ask about preparation methods',
-            'Choose fresh over fermented',
-            'Monitor blood levels regularly'
+            'Read ingredient labels carefully | सामग्री लेबलहरू ध्यानपूर्वक पढ्नुहोस्',
+            'Ask about preparation methods | तयारी विधिहरूबारे सोध्नुहोस्',
+            'Choose fresh over fermented | किण्वित भन्दा ताजा छान्नुहोस्',
+            'Monitor blood levels regularly | नियमित रूपमा रगत स्तर निगरानी गर्नुहोस्'
           ],
           priority: 'medium',
-          evidence: 'Risk Assessment Guidelines'
+          evidence: 'Risk Assessment Guidelines | जोखिम मूल्याङ्कन दिशानिर्देशहरू'
         }
       ]
     };

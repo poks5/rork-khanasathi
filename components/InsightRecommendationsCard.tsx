@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { BookmarkIcon, EyeOffIcon, TrashIcon, PlusIcon, FilterIcon, SearchIcon } from 'lucide-react-native';
 import { useInsights } from '@/providers/InsightsProvider';
@@ -20,7 +20,7 @@ interface InsightRecommendationsCardProps {
   maxHeight?: number;
 }
 
-export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProps> = ({
+const InsightRecommendationsCardComponent: React.FC<InsightRecommendationsCardProps> = ({
   showAddButton = true,
   maxHeight = 400
 }) => {
@@ -29,7 +29,6 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
     stats,
     markAsRead,
     toggleBookmark,
-    addUserNote,
     deleteRecommendation,
     getFilteredRecommendations,
     addPredefinedInsights
@@ -37,22 +36,22 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
   const { t, language } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | undefined>();
-  const [selectedPriority, setSelectedPriority] = useState<RecommendationPriority | undefined>();
+  const [selectedCategory] = useState<RecommendationCategory | undefined>();
+  const [selectedPriority] = useState<RecommendationPriority | undefined>();
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
   const [expandedRecommendation, setExpandedRecommendation] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const filteredRecommendations = getFilteredRecommendations({
+  const filteredRecommendations = useMemo(() => getFilteredRecommendations({
     category: selectedCategory,
     priority: selectedPriority,
     isRead: showUnreadOnly ? false : undefined,
     isBookmarked: showBookmarkedOnly ? true : undefined,
     searchTerm: searchTerm.trim() || undefined
-  });
+  }), [getFilteredRecommendations, selectedCategory, selectedPriority, showUnreadOnly, showBookmarkedOnly, searchTerm]);
 
-  const getPriorityColor = (priority: RecommendationPriority) => {
+  const getPriorityColor = useCallback((priority: RecommendationPriority) => {
     switch (priority) {
       case 'critical': return '#dc2626';
       case 'high': return '#ea580c';
@@ -60,9 +59,9 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
       case 'low': return '#65a30d';
       default: return '#6b7280';
     }
-  };
+  }, []);
 
-  const getCategoryIcon = (category: RecommendationCategory) => {
+  const getCategoryIcon = useCallback((category: RecommendationCategory) => {
     switch (category) {
       case 'mineral-management': return '⚖️';
       case 'protein-optimization': return '🥩';
@@ -73,9 +72,9 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
       case 'safety-guidelines': return '⚠️';
       default: return '📋';
     }
-  };
+  }, []);
 
-  const handleAddPredefinedInsights = () => {
+  const handleAddPredefinedInsights = useCallback(() => {
     Alert.alert(
       t('insights.confirmAddTitle'),
       t('insights.confirmAddMessage'),
@@ -90,9 +89,9 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
         }
       ]
     );
-  };
+  }, [addPredefinedInsights, t]);
 
-  const handleDeleteRecommendation = (id: string, title: string) => {
+  const handleDeleteRecommendation = useCallback((id: string, title: string) => {
     Alert.alert(
       t('insights.deleteConfirmTitle'),
       `${t('insights.deleteConfirmMessage')} "${title}"?`,
@@ -105,9 +104,9 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
         }
       ]
     );
-  };
+  }, [deleteRecommendation, t]);
 
-  const renderRecommendationCard = (recommendation: InsightRecommendation) => {
+  const renderRecommendationCard = useCallback((recommendation: InsightRecommendation) => {
     const isExpanded = expandedRecommendation === recommendation.id;
     
     return (
@@ -226,7 +225,7 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
         )}
       </View>
     );
-  };
+  }, [expandedRecommendation, language, markAsRead, toggleBookmark, handleDeleteRecommendation, getPriorityColor, getCategoryIcon, t]);
 
   return (
     <View style={styles.container}>
@@ -321,6 +320,10 @@ export const InsightRecommendationsCard: React.FC<InsightRecommendationsCardProp
     </View>
   );
 };
+
+InsightRecommendationsCardComponent.displayName = 'InsightRecommendationsCard';
+
+export const InsightRecommendationsCard = React.memo(InsightRecommendationsCardComponent);
 
 const styles = StyleSheet.create({
   container: {
