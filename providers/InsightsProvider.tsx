@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { InsightRecommendation, NutritionRecommendation, RecommendationCategory, RecommendationPriority } from '@/types/food';
 
-const STORAGE_KEY = 'insightRecommendations_v4_complete_bilingual';
+const STORAGE_KEY = 'insightRecommendations_v5_fixed_complete_bilingual';
 
 export const [InsightsProvider, useInsights] = createContextHook(() => {
   const [recommendations, setRecommendations] = useState<InsightRecommendation[]>([]);
@@ -20,7 +20,7 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
       tips: [
         {
           title: 'Safe Achar Choices for Daily Use | दैनिक प्रयोगका लागि सुरक्षित अचार छनोट',
-          content: 'Choose fresh herb-based achars like coriander (धनिया) and mint (पुदिना) pickles. These are naturally low in potassium and sodium when prepared with minimal salt. Limit portions to 1-2 teaspoons per meal. | ताजा जडिबुटीमा आधारित अचारहरू जस्तै धनिया र पुदिनाको अचार छान्नुहोस्। यी प्राकृतिक रूपमा कम पोटासियम र सोडियम हुन्छन् जब न्यूनतम नुनसँग तयार गरिन्छ। प्रति खानामा १-२ चम्चा मात्र सीमित गर्नुहोस्।',
+          content: 'Choose fresh herb-based achars like coriander (धनिया) and mint (पुदिना) pickles. These are naturally low in potassium and sodium when prepared with minimal salt. Limit portions to 1-2 teaspoons per meal.\n\nताजा जडिबुटीमा आधारित अचारहरू जस्तै धनिया र पुदिनाको अचार छान्नुहोस्। यी प्राकृतिक रूपमा कम पोटासियम र सोडियम हुन्छन् जब न्यूनतम नुनसँग तयार गरिन्छ। प्रति खानामा १-२ चम्चा मात्र सीमित गर्नुहोस्।',
           foods: {
             recommended: ['Coriander achar (धनिया अचार)', 'Mint achar (पुदिना अचार)', 'Fresh ginger pickle (अदुवा अचार)'],
             avoid: ['Fermented achars (किण्वित अचार)', 'Commercial pickles (व्यावसायिक अचार)', 'High-sodium preparations (उच्च सोडियम तयारी)']
@@ -36,7 +36,7 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
         },
         {
           title: 'High-Risk Achars to Completely Avoid | पूर्ण रूपमा बच्नुपर्ने उच्च जोखिमका अचारहरू',
-          content: 'Completely avoid tomato achar (गोलभेडा अचार), potato pickle (आलु अचार), and gundruk achar (गुन्द्रुक अचार). These contain extremely high levels of potassium and sodium that can be dangerous for kidney patients. | गोलभेडा अचार, आलु अचार, र गुन्द्रुक अचार पूर्ण रूपमा बच्नुहोस्। यिनमा अत्यधिक मात्रामा पोटासियम र सोडियम हुन्छ जुन मृगौला बिरामीहरूका लागि खतरनाक हुन सक्छ।',
+          content: 'Completely avoid tomato achar (गोलभेडा अचार), potato pickle (आलु अचार), and gundruk achar (गुन्द्रुक अचार). These contain extremely high levels of potassium and sodium that can be dangerous for kidney patients.\n\nगोलभेडा अचार, आलु अचार, र गुन्द्रुक अचार पूर्ण रूपमा बच्नुहोस्। यिनमा अत्यधिक मात्रामा पोटासियम र सोडियम हुन्छ जुन मृगौला बिरामीहरूका लागि खतरनाक हुन सक्छ।',
           foods: {
             avoid: ['Tomato achar (गोलभेडा अचार)', 'Potato pickle (आलु अचार)', 'Gundruk achar (गुन्द्रुक अचार)', 'Fermented radish (मुला अचार)']
           },
@@ -392,13 +392,11 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
         console.log(`📚 Loaded ${parsedRecommendations.length} insight recommendations from storage`);
         setRecommendations(parsedRecommendations);
       } else {
-        // If no stored recommendations, add predefined ones
         console.log('No stored recommendations found, adding predefined insights');
         await addPredefinedInsightsOnFirstLoad();
       }
     } catch (error) {
       console.error('Error loading insight recommendations:', error);
-      // Fallback to predefined insights if storage fails
       console.log('Falling back to predefined insights due to storage error');
       await addPredefinedInsightsOnFirstLoad();
     } finally {

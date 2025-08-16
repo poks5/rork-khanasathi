@@ -38,12 +38,15 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
     if (value === '') {
       // Empty input - clear the value
       numValue = undefined;
-    } else if (value === '.' || value === '0.') {
-      // Allow decimal point input but don't store yet
-      numValue = undefined;
+    } else if (value === '.' || value.endsWith('.')) {
+      // Allow decimal point input - store the partial value for display but don't analyze yet
+      const partialNum = parseFloat(value);
+      if (!isNaN(partialNum)) {
+        numValue = partialNum;
+      }
     } else {
       const parsed = parseFloat(value);
-      if (!isNaN(parsed) && isFinite(parsed)) {
+      if (!isNaN(parsed) && isFinite(parsed) && parsed >= 0) {
         numValue = parsed;
       } else {
         // Invalid input, don't update
@@ -232,6 +235,7 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
           returnKeyType="next"
           selectTextOnFocus={true}
           autoCorrect={false}
+          maxLength={10}
         />
         <Text style={styles.unit}>{unit}</Text>
       </View>

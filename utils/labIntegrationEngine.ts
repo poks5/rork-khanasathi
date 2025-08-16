@@ -37,51 +37,68 @@ export class LabIntegrationEngine {
 
   private generateAlerts(labValues: LabValues): LabAlert[] {
     const alerts: LabAlert[] = [];
+    console.log('🔍 Analyzing lab values:', labValues);
 
     Object.entries(labValues).forEach(([parameter, value]) => {
-      if (value !== undefined && value !== null && DIALYSIS_REFERENCE_RANGES[parameter as keyof LabValues]) {
+      console.log(`🧪 Checking ${parameter}: ${value}`);
+      
+      if (value !== undefined && value !== null && !isNaN(Number(value)) && DIALYSIS_REFERENCE_RANGES[parameter as keyof LabValues]) {
+        const numValue = Number(value);
         const range = DIALYSIS_REFERENCE_RANGES[parameter as keyof LabValues];
         let status: 'low' | 'high' | 'normal' = 'normal';
 
-        if (value < range.min) {
+        if (numValue < range.min) {
           status = 'low';
-        } else if (value > range.max) {
+          console.log(`⚠️ ${parameter} is LOW: ${numValue} < ${range.min}`);
+        } else if (numValue > range.max) {
           status = 'high';
+          console.log(`⚠️ ${parameter} is HIGH: ${numValue} > ${range.max}`);
+        } else {
+          console.log(`✅ ${parameter} is NORMAL: ${numValue} (${range.min}-${range.max})`);
         }
 
         if (status !== 'normal') {
-          const severity = getAlertSeverity(value, range);
-          const urgency = this.getUrgencyLevel(parameter, status, value);
+          const severity = getAlertSeverity(numValue, range);
+          const urgency = this.getUrgencyLevel(parameter, status, numValue);
           
-          alerts.push({
+          const alert: LabAlert = {
             parameter,
-            value,
+            value: numValue,
             normalRange: { min: range.min, max: range.max },
             status,
             severity,
-            explanation: this.generateParameterExplanation(parameter, status, value),
-            clinicalSignificance: this.getClinicalSignificance(parameter, status, value),
+            explanation: this.generateParameterExplanation(parameter, status, numValue),
+            clinicalSignificance: this.getClinicalSignificance(parameter, status, numValue),
             urgency,
             actionRequired: urgency === 'critical' || severity === 'severe',
             timeframe: urgency === 'critical' ? 'immediate' : urgency === 'urgent' ? 'within-24h' : 'within-week'
-          });
+          };
+          
+          alerts.push(alert);
+          console.log(`🚨 Added alert for ${parameter}: ${status} (${severity}, ${urgency})`);
         }
+      } else if (value !== undefined && value !== null) {
+        console.log(`⚠️ Skipping ${parameter}: invalid value or no reference range`);
       }
     });
 
+    console.log(`📊 Generated ${alerts.length} alerts total`);
     return alerts.sort((a, b) => this.getUrgencyScore(b) - this.getUrgencyScore(a));
   }
 
   private generateRecommendations(labValues: LabValues, alerts: LabAlert[]): DietaryRecommendation[] {
     const recommendations: DietaryRecommendation[] = [];
     const culturalFoods = this.config.culturalPreferences === 'nepali';
+    console.log('📝 Generating recommendations for lab values:', labValues);
 
     // Critical potassium management
-    if (labValues.potassium && labValues.potassium > 5.5) {
+    const potassiumValue = Number(labValues.potassium);
+    if (labValues.potassium && !isNaN(potassiumValue) && potassiumValue > 5.5) {
+      console.log('🚨 Critical potassium detected:', potassiumValue);
       recommendations.push({
         id: 'critical-hyperkalemia',
         title: 'URGENT: Critical Potassium Level',
-        description: 'Your potassium level is dangerously high and requires immediate medical attention.',
+        description: `Your potassium level (${potassiumValue} mEq/L) is dangerously high and requires immediate medical attention.`,
         category: 'emergency',
         priority: 'critical',
         evidence: 'KDOQI Clinical Practice Guidelines - Emergency Management',
@@ -95,11 +112,13 @@ export class LabIntegrationEngine {
     }
 
     // Protein-energy wasting prevention
-    if (labValues.albumin && labValues.albumin < 3.5) {
+    const albuminValue = Number(labValues.albumin);
+    if (labValues.albumin && !isNaN(albuminValue) && albuminValue < 3.5) {
+      console.log('🍗 Low albumin detected:', albuminValue);
       recommendations.push({
         id: 'protein-energy-wasting',
         title: 'Prevent Protein-Energy Wasting',
-        description: 'Low albumin suggests protein malnutrition, common in dialysis patients.',
+        description: `Low albumin (${albuminValue} g/dL) suggests protein malnutrition, common in dialysis patients.`,
         category: 'protein',
         priority: 'high',
         evidence: 'KDOQI Nutrition Guidelines for CKD',
@@ -113,11 +132,15 @@ export class LabIntegrationEngine {
     }
 
     // Mineral bone disorder management
-    if (labValues.phosphorus && labValues.phosphorus > 5.5 && labValues.iPTH && labValues.iPTH > 300) {
+    const phosphorusValue = Number(labValues.phosphorus);
+    const iPTHValue = Number(labValues.iPTH);
+    if (labValues.phosphorus && !isNaN(phosphorusValue) && phosphorusValue > 5.5 && 
+        labValues.iPTH && !isNaN(iPTHValue) && iPTHValue > 300) {
+      console.log('🦴 Mineral bone disorder detected - P:', phosphorusValue, 'PTH:', iPTHValue);
       recommendations.push({
         id: 'mineral-bone-disorder',
         title: 'Mineral Bone Disorder Management',
-        description: 'High phosphorus and PTH indicate bone disease requiring comprehensive management.',
+        description: `High phosphorus (${phosphorusValue} mg/dL) and PTH (${iPTHValue} pg/mL) indicate bone disease requiring comprehensive management.`,
         category: 'mineral',
         priority: 'high',
         evidence: 'KDIGO CKD-MBD Guidelines',
@@ -131,11 +154,13 @@ export class LabIntegrationEngine {
     }
 
     // Anemia management
-    if (labValues.hemoglobin && labValues.hemoglobin < 11) {
+    const hemoglobinValue = Number(labValues.hemoglobin);
+    if (labValues.hemoglobin && !isNaN(hemoglobinValue) && hemoglobinValue < 11) {
+      console.log('🩸 Anemia detected:', hemoglobinValue);
       recommendations.push({
         id: 'anemia-management',
         title: 'Anemia Management Required',
-        description: `Hemoglobin ${labValues.hemoglobin} g/dL indicates anemia requiring treatment.`,
+        description: `Hemoglobin ${hemoglobinValue} g/dL indicates anemia requiring treatment.`,
         category: 'protein',
         priority: 'high',
         evidence: 'KDOQI Anemia Guidelines',
@@ -149,11 +174,13 @@ export class LabIntegrationEngine {
     }
 
     // Iron deficiency
-    if (labValues.tsat && labValues.tsat < 20) {
+    const tsatValue = Number(labValues.tsat);
+    if (labValues.tsat && !isNaN(tsatValue) && tsatValue < 20) {
+      console.log('🩸 Iron deficiency detected:', tsatValue);
       recommendations.push({
         id: 'iron-deficiency',
         title: 'Iron Deficiency Treatment',
-        description: `TSAT ${labValues.tsat}% indicates iron deficiency requiring supplementation.`,
+        description: `TSAT ${tsatValue}% indicates iron deficiency requiring supplementation.`,
         category: 'mineral',
         priority: 'high',
         evidence: 'KDOQI Anemia Guidelines',
@@ -164,6 +191,7 @@ export class LabIntegrationEngine {
       });
     }
 
+    console.log(`📝 Generated ${recommendations.length} recommendations`);
     return recommendations;
   }
 
@@ -249,22 +277,29 @@ export class LabIntegrationEngine {
   }
 
   private getUrgencyLevel(parameter: string, status: 'low' | 'high', value: number): 'routine' | 'urgent' | 'critical' {
+    console.log(`🔍 Assessing urgency for ${parameter}: ${value} (${status})`);
+    
     if (parameter === 'potassium') {
       if ((status === 'high' && value > 6.0) || (status === 'low' && value < 3.0)) {
+        console.log('🚨 CRITICAL potassium level');
         return 'critical';
       } else if ((status === 'high' && value > 5.5) || (status === 'low' && value < 3.5)) {
+        console.log('⚠️ URGENT potassium level');
         return 'urgent';
       }
     }
 
     if (parameter === 'phosphorus' && status === 'high' && value > 7.0) {
+      console.log('⚠️ URGENT phosphorus level');
       return 'urgent';
     }
 
     if (parameter === 'albumin' && status === 'low' && value < 3.0) {
+      console.log('⚠️ URGENT albumin level');
       return 'urgent';
     }
 
+    console.log('🟢 ROUTINE level for', parameter);
     return 'routine';
   }
 

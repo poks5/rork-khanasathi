@@ -1,11 +1,19 @@
-import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { LabDashboard } from '@/components/LabDashboard';
 import { InsightRecommendationsCard } from '@/components/InsightRecommendationsCard';
+import { useInsights } from '@/providers/InsightsProvider';
 
 const InsightsScreenComponent = React.memo(() => {
+  const { isLoading, addPredefinedInsights } = useInsights();
+
+  const handleRefresh = useCallback(() => {
+    console.log('🔄 Refreshing insights...');
+    addPredefinedInsights();
+  }, [addPredefinedInsights]);
+
   const memoizedInsightCard = useMemo(() => (
-    <InsightRecommendationsCard showAddButton={true} maxHeight={500} />
+    <InsightRecommendationsCard showAddButton={true} maxHeight={600} />
   ), []);
 
   const memoizedLabDashboard = useMemo(() => (
@@ -17,6 +25,13 @@ const InsightsScreenComponent = React.memo(() => {
       style={styles.container} 
       showsVerticalScrollIndicator={false}
       removeClippedSubviews={true}
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={handleRefresh}
+          tintColor={"#007AFF"}
+        />
+      }
     >
       {memoizedInsightCard}
       {memoizedLabDashboard}
