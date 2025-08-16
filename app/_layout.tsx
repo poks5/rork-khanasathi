@@ -39,7 +39,7 @@ function RootLayoutNav() {
         name="admin" 
         options={{ 
           presentation: "modal",
-          headerShown: false 
+          title: "Admin Panel"
         }} 
       />
     </Stack>

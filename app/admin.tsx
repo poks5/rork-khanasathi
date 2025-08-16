@@ -13,7 +13,6 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack } from 'expo-router';
 import { Search, Edit3, Save, X, Plus, Trash2, Upload } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { Food } from '@/types/food';
@@ -190,7 +189,6 @@ export default function AdminPanel() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Stack.Screen options={{ title: 'Admin Panel', headerStyle: { backgroundColor: colors.primary } }} />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -200,13 +198,6 @@ export default function AdminPanel() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
-        options={{ 
-          title: 'Food Admin Panel', 
-          headerStyle: { backgroundColor: colors.primary },
-          headerTintColor: colors.white,
-        }} 
-      />
       
       <View style={styles.header}>
         <View style={styles.searchContainer}>
