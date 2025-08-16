@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { colors } from '@/constants/colors';
-import { BloodReport, LabValues, AnthropometricData } from '@/types/bloodReport';
+import { BloodReport, LabValues } from '@/types/bloodReport';
 import { useBloodReports } from '@/providers/BloodReportProvider';
-import { AlertTriangle, Save, X } from 'lucide-react-native';
+import { AlertTriangle, Save, X, Activity, CheckCircle } from 'lucide-react-native';
 
 interface BloodReportFormProps {
   onClose: () => void;
@@ -11,236 +11,277 @@ interface BloodReportFormProps {
 }
 
 interface RealTimeAlert {
-  type: 'critical' | 'warning';
+  type: 'critical' | 'warning' | 'info';
   message: string;
   parameter: string;
   value: number;
+  icon: 'alert' | 'warning' | 'check';
 }
+
+interface FormField {
+  key: keyof LabValues;
+  label: string;
+  unit: string;
+  normalRange: string;
+  critical?: { min?: number; max?: number };
+  warning?: { min?: number; max?: number };
+}
+
+const LAB_FIELDS: FormField[] = [
+  { key: 'urea', label: 'Blood Urea', unit: 'mg/dL', normalRange: '20-60 (pre-dialysis)' },
+  { key: 'creatinine', label: 'Creatinine', unit: 'mg/dL', normalRange: '8-12 (pre-dialysis)' },
+  { key: 'potassium', label: 'Potassium ⚠️', unit: 'mEq/L', normalRange: '3.5-5.0', critical: { min: 3.0, max: 6.0 }, warning: { min: 3.5, max: 5.5 } },
+  { key: 'sodium', label: 'Sodium', unit: 'mEq/L', normalRange: '136-145' },
+  { key: 'calcium', label: 'Calcium', unit: 'mg/dL', normalRange: '8.5-10.5' },
+  { key: 'phosphorus', label: 'Phosphorus', unit: 'mg/dL', normalRange: '3.5-5.5', critical: { max: 7.0 }, warning: { max: 5.5 } },
+  { key: 'albumin', label: 'Albumin', unit: 'g/dL', normalRange: '3.5-5.0', critical: { min: 3.0 }, warning: { min: 3.5 } },
+  { key: 'hemoglobin', label: 'Hemoglobin', unit: 'g/dL', normalRange: '11-12', critical: { min: 9.0 }, warning: { min: 11.0 } },
+  { key: 'iPTH', label: 'iPTH', unit: 'pg/mL', normalRange: '150-300' },
+  { key: 'tsat', label: 'TSAT', unit: '%', normalRange: '20-50', warning: { min: 20 } },
+  { key: 'serumFerritin', label: 'Ferritin', unit: 'ng/mL', normalRange: '200-500' },
+];
 
 export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editingReport }) => {
   const { addReport, updateReport } = useBloodReports();
   
   const [date, setDate] = useState(editingReport?.date || new Date().toISOString().split('T')[0]);
   const [patientType] = useState<'hemodialysis' | 'peritoneal' | 'ckd'>(editingReport?.patientType || 'hemodialysis');
-  const [preHD, setPreHD] = useState<LabValues>(editingReport?.preHD || {});
-  const [postHD] = useState<LabValues>(editingReport?.postHD || {});
-  const [anthropometric] = useState<AnthropometricData>(editingReport?.anthropometric || {});
+  const [labValues, setLabValues] = useState<LabValues>(editingReport?.preHD || {});
   const [clinicalNotes, setClinicalNotes] = useState(editingReport?.clinicalNotes || '');
-  const [realTimeAlert, setRealTimeAlert] = useState<RealTimeAlert | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const updatePreHD = useCallback((field: keyof LabValues, value: string) => {
-    console.log(`🔬 Updating ${field}: "${value}"`);
-    
-    // Handle decimal input properly - allow empty string and valid numbers
-    let numValue: number | undefined = undefined;
-    
-    if (value === '') {
-      // Empty input - clear the value
-      numValue = undefined;
-    } else if (value === '.' || value.endsWith('.')) {
-      // Allow decimal point input - store the partial value for display but don't analyze yet
-      const partialNum = parseFloat(value);
-      if (!isNaN(partialNum)) {
-        numValue = partialNum;
+  const [inputValues, setInputValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    Object.entries(editingReport?.preHD || {}).forEach(([key, value]) => {
+      if (value !== undefined) {
+        initial[key] = value.toString();
       }
-    } else {
-      const parsed = parseFloat(value);
-      if (!isNaN(parsed) && isFinite(parsed) && parsed >= 0) {
-        numValue = parsed;
-      } else {
-        // Invalid input, don't update
-        console.log(`❌ Invalid input for ${field}: "${value}"`);
-        return;
+    });
+    return initial;
+  });
+
+  // Real-time alert calculation
+  const currentAlert = useMemo((): RealTimeAlert | null => {
+    for (const field of LAB_FIELDS) {
+      const inputValue = inputValues[field.key];
+      if (!inputValue || inputValue === '' || inputValue === '.') continue;
+      
+      const numValue = parseFloat(inputValue);
+      if (isNaN(numValue) || !isFinite(numValue)) continue;
+      
+      // Check critical ranges
+      if (field.critical) {
+        if (field.critical.min !== undefined && numValue < field.critical.min) {
+          return {
+            type: 'critical',
+            message: `CRITICAL: ${field.label} ${numValue} ${field.unit} is dangerously low`,
+            parameter: field.key,
+            value: numValue,
+            icon: 'alert'
+          };
+        }
+        if (field.critical.max !== undefined && numValue > field.critical.max) {
+          return {
+            type: 'critical',
+            message: `CRITICAL: ${field.label} ${numValue} ${field.unit} is dangerously high`,
+            parameter: field.key,
+            value: numValue,
+            icon: 'alert'
+          };
+        }
+      }
+      
+      // Check warning ranges
+      if (field.warning) {
+        if (field.warning.min !== undefined && numValue < field.warning.min) {
+          return {
+            type: 'warning',
+            message: `WARNING: ${field.label} ${numValue} ${field.unit} is below normal range`,
+            parameter: field.key,
+            value: numValue,
+            icon: 'warning'
+          };
+        }
+        if (field.warning.max !== undefined && numValue > field.warning.max) {
+          return {
+            type: 'warning',
+            message: `WARNING: ${field.label} ${numValue} ${field.unit} is above normal range`,
+            parameter: field.key,
+            value: numValue,
+            icon: 'warning'
+          };
+        }
       }
     }
-    
-    setPreHD(prev => {
-      const updated = { ...prev, [field]: numValue };
-      console.log(`📊 Updated ${field} to:`, numValue, 'from input:', value);
-      return updated;
-    });
+    return null;
+  }, [inputValues]);
 
-    // Real-time critical value detection - only for valid numbers
-    if (numValue !== undefined && !isNaN(numValue)) {
-      if (field === 'potassium') {
-        if (numValue > 6.0) {
-          setRealTimeAlert({
-            type: 'critical',
-            message: 'CRITICAL: Potassium >6.0 - Immediate medical attention required',
-            parameter: 'potassium',
-            value: numValue
-          });
-        } else if (numValue < 3.0) {
-          setRealTimeAlert({
-            type: 'critical',
-            message: 'CRITICAL: Potassium <3.0 - Risk of cardiac arrhythmia',
-            parameter: 'potassium',
-            value: numValue
-          });
-        } else if (numValue > 5.0 || numValue < 3.5) {
-          setRealTimeAlert({
-            type: 'warning',
-            message: `WARNING: Potassium ${numValue} is outside normal range (3.5-5.0)`,
-            parameter: 'potassium',
-            value: numValue
-          });
-        } else {
-          setRealTimeAlert(null);
-        }
-      } else if (field === 'phosphorus') {
-        if (numValue > 7.0) {
-          setRealTimeAlert({
-            type: 'critical',
-            message: 'CRITICAL: Phosphorus >7.0 - Severe bone disease risk',
-            parameter: 'phosphorus',
-            value: numValue
-          });
-        } else if (numValue > 5.5 || numValue < 3.5) {
-          setRealTimeAlert({
-            type: 'warning',
-            message: `WARNING: Phosphorus ${numValue} is outside normal range (3.5-5.5)`,
-            parameter: 'phosphorus',
-            value: numValue
-          });
-        } else {
-          setRealTimeAlert(null);
-        }
-      } else if (field === 'albumin') {
-        if (numValue < 3.0) {
-          setRealTimeAlert({
-            type: 'critical',
-            message: 'CRITICAL: Albumin <3.0 - Severe malnutrition risk',
-            parameter: 'albumin',
-            value: numValue
-          });
-        } else if (numValue < 3.5) {
-          setRealTimeAlert({
-            type: 'warning',
-            message: `WARNING: Albumin ${numValue} is below normal (3.5-5.0)`,
-            parameter: 'albumin',
-            value: numValue
-          });
-        } else {
-          setRealTimeAlert(null);
-        }
-      } else if (field === 'hemoglobin') {
-        if (numValue < 9.0) {
-          setRealTimeAlert({
-            type: 'critical',
-            message: 'CRITICAL: Hemoglobin <9.0 - Severe anemia',
-            parameter: 'hemoglobin',
-            value: numValue
-          });
-        } else if (numValue < 11.0) {
-          setRealTimeAlert({
-            type: 'warning',
-            message: `WARNING: Hemoglobin ${numValue} is below target (11-12)`,
-            parameter: 'hemoglobin',
-            value: numValue
-          });
-        } else {
-          setRealTimeAlert(null);
-        }
-      } else if (field === 'urea') {
-        if (numValue > 80) {
-          setRealTimeAlert({
-            type: 'warning',
-            message: `WARNING: Blood Urea ${numValue} is high - may need dialysis adjustment`,
-            parameter: 'urea',
-            value: numValue
-          });
-        } else {
-          setRealTimeAlert(null);
-        }
-      } else if (field === 'creatinine') {
-        if (numValue > 15) {
-          setRealTimeAlert({
-            type: 'warning',
-            message: `WARNING: Creatinine ${numValue} is very high`,
-            parameter: 'creatinine',
-            value: numValue
-          });
-        } else {
-          setRealTimeAlert(null);
-        }
-      } else {
-        setRealTimeAlert(null);
-      }
-    } else {
-      // Clear alerts when value is cleared
-      setRealTimeAlert(null);
+  const updateLabValue = useCallback((field: keyof LabValues, value: string) => {
+    console.log(`🔬 Updating ${field}: "${value}"`);
+    
+    // Update input display value
+    setInputValues(prev => ({ ...prev, [field]: value }));
+    
+    // Parse and validate numeric value
+    if (value === '' || value === '.') {
+      // Clear the lab value
+      setLabValues(prev => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+      return;
+    }
+    
+    // Validate decimal input
+    const decimalRegex = /^\d*\.?\d*$/;
+    if (!decimalRegex.test(value)) {
+      console.log(`❌ Invalid format for ${field}: "${value}"`);
+      return;
+    }
+    
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && isFinite(numValue) && numValue >= 0) {
+      setLabValues(prev => ({ ...prev, [field]: numValue }));
+      console.log(`✅ Updated ${field} to:`, numValue);
     }
   }, []);
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
     
+    // Validate required fields
+    const hasValues = Object.keys(labValues).length > 0;
+    if (!hasValues) {
+      Alert.alert('Validation Error', 'Please enter at least one lab value before saving.');
+      return;
+    }
+    
+    if (!date) {
+      Alert.alert('Validation Error', 'Please enter a report date.');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      console.log('🩸 Submitting blood report with data:', preHD);
+      console.log('🩸 === BLOOD REPORT SUBMISSION START ===');
+      console.log('📊 Lab Values:', JSON.stringify(labValues, null, 2));
+      console.log('📅 Report Date:', date);
+      console.log('📝 Clinical Notes:', clinicalNotes);
+      console.log('🏥 Patient Type:', patientType);
       
       const reportData = {
         date,
-        preHD,
-        postHD,
-        anthropometric,
+        preHD: labValues,
+        postHD: {},
+        anthropometric: {},
         clinicalNotes,
         patientType,
         reviewStatus: 'pending' as const
       };
+      
+      console.log('📦 Report Data Package:', JSON.stringify(reportData, null, 2));
 
       if (editingReport) {
+        console.log('📝 Updating existing report:', editingReport.id);
         updateReport(editingReport.id, reportData);
-        Alert.alert('Success', 'Blood report updated successfully');
+        console.log('✅ Report updated successfully');
+        Alert.alert(
+          'Success', 
+          'Blood report updated successfully',
+          [{ text: 'OK', onPress: onClose }]
+        );
       } else {
+        console.log('🆕 Creating new report...');
         const newReport = addReport(reportData);
+        console.log('📊 New Report Created:', JSON.stringify(newReport, null, 2));
+        
         const alertCount = newReport.analysis?.alerts.length || 0;
         const recommendationCount = newReport.analysis?.recommendations.length || 0;
         
-        console.log(`✅ Report created with ${alertCount} alerts and ${recommendationCount} recommendations`);
+        console.log(`✅ === ANALYSIS RESULTS ===`);
+        console.log(`🚨 Alerts: ${alertCount}`);
+        console.log(`💡 Recommendations: ${recommendationCount}`);
+        console.log(`📊 Overall Risk: ${newReport.analysis?.overallRisk || 'unknown'}`);
+        console.log(`📝 Summary: ${newReport.analysis?.summary || 'no summary'}`);
         
-        Alert.alert(
-          'Analysis Complete',
-          `Report saved with ${alertCount} alerts and ${recommendationCount} recommendations`,
-          [{ text: 'OK', onPress: onClose }]
-        );
+        if (newReport.analysis?.alerts) {
+          newReport.analysis.alerts.forEach((alert, index) => {
+            console.log(`🚨 Alert ${index + 1}: ${alert.parameter} = ${alert.value} (${alert.status}, ${alert.severity})`);
+          });
+        }
+        
+        if (Platform.OS === 'web') {
+          Alert.alert(
+            'Analysis Complete',
+            `Report saved successfully!\n\n• ${alertCount} alerts generated\n• ${recommendationCount} recommendations created\n• Risk Level: ${newReport.analysis?.overallRisk || 'unknown'}`,
+            [{ text: 'View Results', onPress: onClose }]
+          );
+        } else {
+          Alert.alert(
+            '🎉 Analysis Complete',
+            `Your blood report has been analyzed:\n\n📊 ${alertCount} alerts\n💡 ${recommendationCount} recommendations\n🏁 Risk: ${newReport.analysis?.overallRisk || 'unknown'}\n\nTap 'View Results' to see your personalized insights.`,
+            [{ text: 'View Results', onPress: onClose }]
+          );
+        }
       }
       
-      if (editingReport) {
-        onClose();
-      }
+      console.log('✅ === BLOOD REPORT SUBMISSION COMPLETE ===');
     } catch (error) {
-      console.error('Error saving report:', error);
-      Alert.alert('Error', 'Failed to save blood report. Please try again.');
+      console.error('❌ === ERROR DURING SUBMISSION ===');
+      console.error('Error details:', error);
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+      
+      Alert.alert(
+        'Save Error', 
+        `Failed to save blood report: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease check the console for details and try again.`,
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const renderLabInput = (label: string, field: keyof LabValues, unit: string, normalRange?: string) => (
-    <View style={styles.inputGroup}>
-      <View style={styles.labelRow}>
-        <Text style={styles.inputLabel}>{label}</Text>
-        {normalRange && <Text style={styles.normalRange}>{normalRange}</Text>}
+  const renderLabInput = (fieldConfig: FormField) => {
+    const { key, label, unit, normalRange } = fieldConfig;
+    const inputValue = inputValues[key] || '';
+    const hasValue = labValues[key] !== undefined;
+    const isValid = hasValue && !isNaN(Number(inputValue));
+    
+    return (
+      <View key={key} style={styles.inputGroup}>
+        <View style={styles.labelRow}>
+          <Text style={styles.inputLabel}>{label}</Text>
+          <Text style={styles.normalRange}>{normalRange}</Text>
+        </View>
+        <View style={[
+          styles.inputWithUnit,
+          isValid && styles.inputWithUnitValid,
+          currentAlert?.parameter === key && currentAlert.type === 'critical' && styles.inputWithUnitCritical,
+          currentAlert?.parameter === key && currentAlert.type === 'warning' && styles.inputWithUnitWarning
+        ]}>
+          <TextInput
+            style={styles.input}
+            value={inputValue}
+            onChangeText={(value) => updateLabValue(key, value)}
+            placeholder="0.0"
+            keyboardType="decimal-pad"
+            returnKeyType="next"
+            selectTextOnFocus={true}
+            autoCorrect={false}
+            maxLength={8}
+            testID={`lab-input-${key}`}
+          />
+          <Text style={styles.unit}>{unit}</Text>
+          {isValid && (
+            <View style={styles.validIcon}>
+              <CheckCircle size={16} color={colors.success} />
+            </View>
+          )}
+        </View>
       </View>
-      <View style={styles.inputWithUnit}>
-        <TextInput
-          style={styles.input}
-          value={preHD[field]?.toString() || ''}
-          onChangeText={(value) => updatePreHD(field, value)}
-          placeholder="Enter value"
-          keyboardType="decimal-pad"
-          returnKeyType="next"
-          selectTextOnFocus={true}
-          autoCorrect={false}
-          maxLength={10}
-        />
-        <Text style={styles.unit}>{unit}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -253,20 +294,38 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
         </TouchableOpacity>
       </View>
 
-      {realTimeAlert && (
+      {currentAlert && (
         <View style={[
           styles.alertBanner,
-          realTimeAlert.type === 'critical' ? styles.criticalAlert : styles.warningAlert
+          currentAlert.type === 'critical' && styles.criticalAlert,
+          currentAlert.type === 'warning' && styles.warningAlert,
+          currentAlert.type === 'info' && styles.infoAlert
         ]}>
-          <AlertTriangle 
-            size={20} 
-            color={realTimeAlert.type === 'critical' ? colors.white : colors.warning} 
-          />
+          {currentAlert.icon === 'alert' && (
+            <AlertTriangle 
+              size={20} 
+              color={currentAlert.type === 'critical' ? colors.white : colors.warning} 
+            />
+          )}
+          {currentAlert.icon === 'warning' && (
+            <AlertTriangle 
+              size={20} 
+              color={colors.warning} 
+            />
+          )}
+          {currentAlert.icon === 'check' && (
+            <Activity 
+              size={20} 
+              color={colors.primary} 
+            />
+          )}
           <Text style={[
             styles.alertText,
-            realTimeAlert.type === 'critical' ? styles.criticalAlertText : styles.warningAlertText
+            currentAlert.type === 'critical' && styles.criticalAlertText,
+            currentAlert.type === 'warning' && styles.warningAlertText,
+            currentAlert.type === 'info' && styles.infoAlertText
           ]}>
-            {realTimeAlert.message}
+            {currentAlert.message}
           </Text>
         </View>
       )}
@@ -285,18 +344,13 @@ export const BloodReportForm: React.FC<BloodReportFormProps> = ({ onClose, editi
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.tabContent}>
-          <Text style={styles.sectionTitle}>Essential Dialysis Monitoring</Text>
-          {renderLabInput('Blood Urea', 'urea', 'mg/dL', '20-60 (pre-dialysis)')}
-          {renderLabInput('Creatinine', 'creatinine', 'mg/dL', '8-12 (pre-dialysis)')}
-          {renderLabInput('Potassium ⚠️', 'potassium', 'mEq/L', '3.5-5.0')}
-          {renderLabInput('Sodium', 'sodium', 'mEq/L', '136-145')}
-          {renderLabInput('Calcium', 'calcium', 'mg/dL', '8.5-10.5')}
-          {renderLabInput('Phosphorus', 'phosphorus', 'mg/dL', '3.5-5.5')}
-          {renderLabInput('Albumin', 'albumin', 'g/dL', '3.5-5.0')}
-          {renderLabInput('Hemoglobin', 'hemoglobin', 'g/dL', '11-12')}
-          {renderLabInput('iPTH', 'iPTH', 'pg/mL', '150-300')}
-          {renderLabInput('TSAT', 'tsat', '%', '20-50')}
-          {renderLabInput('Ferritin', 'serumFerritin', 'ng/mL', '200-500')}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Essential Dialysis Monitoring</Text>
+            <Text style={styles.sectionSubtitle}>
+              Enter your lab values below. Real-time alerts will appear for critical values.
+            </Text>
+          </View>
+          {LAB_FIELDS.map(renderLabInput)}
         </View>
 
         <View style={styles.notesSection}>
@@ -372,6 +426,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.warning,
   },
+  infoAlert: {
+    backgroundColor: colors.primary + '20',
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
   alertText: {
     flex: 1,
     fontSize: 14,
@@ -382,6 +441,9 @@ const styles = StyleSheet.create({
   },
   warningAlertText: {
     color: colors.warning,
+  },
+  infoAlertText: {
+    color: colors.primary,
   },
   basicInfo: {
     backgroundColor: colors.white,
@@ -401,11 +463,19 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
   },
+  sectionHeader: {
+    marginBottom: 16,
+  },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600' as const,
+    fontSize: 18,
+    fontWeight: '700' as const,
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
   inputGroup: {
     gap: 8,
@@ -432,6 +502,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
+    position: 'relative',
+  },
+  inputWithUnitValid: {
+    borderColor: colors.success,
+    backgroundColor: colors.success + '10',
+  },
+  inputWithUnitCritical: {
+    borderColor: colors.error,
+    backgroundColor: colors.error + '10',
+  },
+  inputWithUnitWarning: {
+    borderColor: colors.warning,
+    backgroundColor: colors.warning + '10',
+  },
+  validIcon: {
+    position: 'absolute',
+    right: 40,
+    top: '50%',
+    transform: [{ translateY: -8 }],
   },
   input: {
     flex: 1,
