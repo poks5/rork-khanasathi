@@ -10,16 +10,18 @@ import {
   Switch,
   Alert,
 } from "react-native";
-import { User, Heart, Droplet, AlertCircle } from "lucide-react-native";
+import { User, Heart, Droplet, AlertCircle, Shield } from "lucide-react-native";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { useUserProfile } from "@/providers/UserProfileProvider";
 import { colors } from "@/constants/colors";
+import { useRouter } from "expo-router";
 
 export default function ProfileScreen() {
   const { t } = useLanguage();
   const { profile, updateProfile, resetProfile } = useUserProfile();
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState(profile);
+  const router = useRouter();
 
   const handleSave = () => {
     updateProfile(formData);
@@ -48,14 +50,25 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('profile.title')}</Text>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => editMode ? handleSave() : setEditMode(true)}
-        >
-          <Text style={styles.editButtonText}>
-            {editMode ? t('common.save') : t('common.edit')}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            testID="admin-nav-button"
+            accessibilityLabel="Open Admin"
+            style={styles.adminButton}
+            onPress={() => router.push('/admin')}
+          >
+            <Shield size={16} color={colors.white} />
+            <Text style={styles.adminButtonText}>Admin</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => editMode ? handleSave() : setEditMode(true)}
+          >
+            <Text style={styles.editButtonText}>
+              {editMode ? t('common.save') : t('common.edit')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -202,6 +215,25 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold' as const,
     color: colors.text,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  adminButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.text,
+    borderRadius: 20,
+  },
+  adminButtonText: {
+    color: colors.white,
+    fontWeight: '600' as const,
+    fontSize: 12,
   },
   editButton: {
     paddingHorizontal: 16,
