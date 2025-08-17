@@ -33,10 +33,6 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
   const loadData = useCallback(async () => {
     try {
       await measureAsyncPerformance('loadNutritionData', async () => {
@@ -59,6 +55,10 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
 
 
@@ -129,13 +129,13 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     const updatedLog = [...foodLog, newEntry];
     setFoodLog(updatedLog);
     saveFoodLog(updatedLog);
-  }, [foodLog]);
+  }, [foodLog, saveFoodLog]);
 
   const removeFromLog = useCallback((id: string) => {
     const updatedLog = foodLog.filter(entry => entry.id !== id);
     setFoodLog(updatedLog);
     saveFoodLog(updatedLog);
-  }, [foodLog]);
+  }, [foodLog, saveFoodLog]);
 
   const clearLog = useCallback(async () => {
     setFoodLog([]);
