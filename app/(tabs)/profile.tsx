@@ -212,6 +212,18 @@ export default function ProfileScreen() {
             doctor or local emergency number immediately.
           </Text>
         </View>
+
+        <View
+          testID="app-concept-credits"
+          accessibilityLabel="App concept credits"
+          style={styles.creditsBox}
+        >
+          <View style={styles.sectionHeader}>
+            <Shield size={18} color={colors.primary} />
+            <Text style={styles.creditsTitle}>App Concept Developed by</Text>
+          </View>
+          <Text style={styles.creditsText}>Dr. Anil Pokhrel, MD, DM{"\n"}Consultant Nephrologist</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -344,7 +356,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 16,
     marginHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 12,
     marginTop: 8,
     borderWidth: 1,
     borderColor: colors.border,
@@ -377,5 +389,25 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: '600' as const,
     fontSize: 16,
+  },
+  creditsBox: {
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  creditsTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: colors.text,
+  },
+  creditsText: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textSecondary,
   },
 });
