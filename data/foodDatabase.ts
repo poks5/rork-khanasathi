@@ -1277,7 +1277,7 @@ export const foodDatabase: Food[] = [
     nameNe: 'परम्परागत नेपाली खाना जसमा दाल, भात, तरकारी र अचार समावेश छ',
     category: 'traditional',
     subcategory: 'complete-meals',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=200',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/v9awhkprncpx6mnlgva5s',
     defaultPortion: 1,
     unitEn: 'set',
     unitNe: 'सेट',
