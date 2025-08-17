@@ -39,6 +39,8 @@ export default function AdminPanel() {
   const [foodOverrides, setFoodOverrides] = useState<Record<string, FoodOverride>>({});
   const [editForm, setEditForm] = useState<FoodOverride>({} as FoodOverride);
   const [isLoading, setIsLoading] = useState(true);
+  const [importModalVisible, setImportModalVisible] = useState(false);
+  const [importText, setImportText] = useState('');
 
   useEffect(() => {
     loadFoodOverrides();
@@ -158,23 +160,23 @@ export default function AdminPanel() {
   };
 
   const importData = () => {
-    Alert.prompt(
-      'Import Data',
-      'Paste the exported JSON data:',
-      async (jsonData) => {
-        try {
-          const parsed = JSON.parse(jsonData || '{}');
-          if (parsed.overrides) {
-            await saveFoodOverrides(parsed.overrides);
-            Alert.alert('Success', 'Data imported successfully!');
-          } else {
-            Alert.alert('Error', 'Invalid data format');
-          }
-        } catch {
-          Alert.alert('Error', 'Invalid JSON data');
-        }
+    setImportText('');
+    setImportModalVisible(true);
+  };
+
+  const processImportData = async () => {
+    try {
+      const parsed = JSON.parse(importText || '{}');
+      if (parsed.overrides) {
+        await saveFoodOverrides(parsed.overrides);
+        setImportModalVisible(false);
+        Alert.alert('Success', 'Data imported successfully!');
+      } else {
+        Alert.alert('Error', 'Invalid data format');
       }
-    );
+    } catch {
+      Alert.alert('Error', 'Invalid JSON data');
+    }
   };
 
   const getSafetyColor = (level: 'safe' | 'caution' | 'avoid') => {
@@ -378,6 +380,40 @@ export default function AdminPanel() {
               <Text style={styles.previewNameNe}>{editForm.nameNe}</Text>
             </View>
           </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={importModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setImportModalVisible(false)}>
+              <X size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Import Data</Text>
+            <TouchableOpacity onPress={processImportData}>
+              <Save size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.modalContent}>
+            <Text style={styles.fieldLabel}>Paste the exported JSON data:</Text>
+            <TextInput
+              style={[styles.textInput, styles.importTextArea]}
+              value={importText}
+              onChangeText={setImportText}
+              placeholder="Paste JSON data here..."
+              multiline
+              numberOfLines={10}
+              textAlignVertical="top"
+            />
+          </View>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
@@ -626,5 +662,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  importTextArea: {
+    height: 200,
+    textAlignVertical: 'top',
   },
 });
