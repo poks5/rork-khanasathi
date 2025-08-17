@@ -1603,7 +1603,7 @@ export const foodDatabase: Food[] = [
     nameNe: 'मिश्रित अचार',
     category: 'traditional',
     subcategory: 'pickles-fermented',
-    image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=200',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2c2n9v85z4338yvzrsxea',
     defaultPortion: 20,
     unitEn: 'grams',
     unitNe: 'ग्राम',
