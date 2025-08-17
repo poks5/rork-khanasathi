@@ -22,16 +22,19 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const todayIntakeCache = useRef<{ date: string; intake: NutrientIntake } | null>(null);
   const recommendationsCache = useRef<{ key: string; recommendations: NutritionRecommendation[] } | null>(null);
   
-  // Get insights recommendations if available (memoized)
+  // Get insights recommendations if available - moved to top level
+  let insights: ReturnType<typeof useInsights> | null = null;
+  try {
+    insights = useInsights();
+  } catch {
+    // InsightsProvider might not be available in all contexts
+    insights = null;
+  }
+  
   const insightRecommendations = useMemo(() => {
-    try {
-      const insights = useInsights();
-      return insights.convertToNutritionRecommendations();
-    } catch {
-      // InsightsProvider might not be available in all contexts
-      return [];
-    }
-  }, []);
+    if (!insights) return [];
+    return insights.convertToNutritionRecommendations();
+  }, [insights]);
 
   const loadData = useCallback(async () => {
     try {
