@@ -1092,7 +1092,7 @@ export const foodDatabase: Food[] = [
     nameNe: 'पानी आमला',
     category: 'fruits',
     subcategory: 'low-potassium',
-    image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/p5tuxickbu39h1ipd8a4e',
     defaultPortion: 2,
     unitEn: 'medium',
     unitNe: 'मध्यम',
