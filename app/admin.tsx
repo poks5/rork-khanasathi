@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Edit3, Save, X, Plus, Trash2, Upload } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
@@ -149,13 +150,47 @@ export default function AdminPanel() {
         timestamp: new Date().toISOString(),
         overrides: foodOverrides,
       };
-      console.log('Food overrides data:', JSON.stringify(dataToExport, null, 2));
-      Alert.alert(
-        'Export Data',
-        'Food override data has been logged to console. You can copy it from there.'
-      );
-    } catch {
-      Alert.alert('Error', 'Failed to export data');
+      const jsonString = JSON.stringify(dataToExport, null, 2);
+      
+      // Try to copy to clipboard
+      if (Platform.OS === 'web') {
+        // For web, use the Clipboard API
+        await Clipboard.setStringAsync(jsonString);
+        Alert.alert(
+          'Export Successful',
+          'Food override data has been copied to your clipboard. You can paste it anywhere to save or share.'
+        );
+      } else {
+        // For mobile, copy to clipboard and also log
+        await Clipboard.setStringAsync(jsonString);
+        console.log('Food overrides data:', jsonString);
+        Alert.alert(
+          'Export Successful',
+          'Food override data has been copied to your clipboard and logged to console.'
+        );
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      // Fallback: just show the data in an alert for small datasets
+      const dataToExport = {
+        timestamp: new Date().toISOString(),
+        overrides: foodOverrides,
+      };
+      const jsonString = JSON.stringify(dataToExport, null, 2);
+      
+      if (jsonString.length < 1000) {
+        Alert.alert(
+          'Export Data',
+          `Copy this data:\n\n${jsonString}`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Export Error',
+          'Failed to copy to clipboard. Please check the console for the exported data.'
+        );
+        console.log('Food overrides data:', jsonString);
+      }
     }
   };
 
