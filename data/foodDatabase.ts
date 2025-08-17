@@ -408,7 +408,7 @@ export const foodDatabase: Food[] = [
     nameNe: 'भन्टा',
     category: 'vegetables',
     subcategory: 'medium-potassium',
-    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ycq4npo1adc0oommwxcaz',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/djvgu8j7v3c867i3us79d',
     defaultPortion: 100,
     unitEn: 'grams',
     unitNe: 'ग्राम',
