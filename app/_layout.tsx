@@ -67,21 +67,21 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    // Delay splash screen hiding to allow providers to initialize
-    const timer = setTimeout(() => {
-      SplashScreen.hideAsync();
-    }, 100);
+    // Hide splash screen immediately for faster startup
+    SplashScreen.hideAsync();
     
-    // Initialize SEO and performance optimizations for web (non-blocking)
+    // Initialize SEO and performance optimizations for web (non-blocking, delayed)
     if (Platform.OS === 'web') {
       setTimeout(() => {
-        generateMetaTags();
-        initializeWebPerformance();
-        trackWebVitals();
-      }, 0);
+        try {
+          generateMetaTags();
+          initializeWebPerformance();
+          trackWebVitals();
+        } catch (error) {
+          console.warn('Web optimization failed:', error);
+        }
+      }, 2000); // Delay to not block initial render
     }
-
-    return () => clearTimeout(timer);
   }, []);
 
   return (

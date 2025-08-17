@@ -2799,7 +2799,9 @@ export async function getAllFoodsAsync(): Promise<Food[]> {
   return foodDatabase.map(applyOverridesSync);
 }
 
-// Initialize overrides loading in background
-setTimeout(() => {
-  loadFoodOverrides();
-}, 100);
+// Initialize overrides loading in background (non-blocking)
+if (typeof setTimeout !== 'undefined') {
+  setTimeout(() => {
+    loadFoodOverrides().catch(console.error);
+  }, 1000); // Delay to not block initial render
+}

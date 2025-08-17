@@ -4,7 +4,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import { FoodLogEntry, NutrientIntake, NutritionRecommendation } from '@/types/food';
 import { UserProfile, DailyLimits } from '@/types/user';
 import { useInsights } from '@/providers/InsightsProvider';
-import { asyncStorageBatch, measureAsyncPerformance } from '@/utils/performance';
+
 
 const defaultLimits: DailyLimits = {
   potassium: 2000,
@@ -22,36 +22,34 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const todayIntakeCache = useRef<{ date: string; intake: NutrientIntake } | null>(null);
   const recommendationsCache = useRef<{ key: string; recommendations: NutritionRecommendation[] } | null>(null);
   
-  // Get insights recommendations if available - moved to top level
-  let insights: ReturnType<typeof useInsights> | null = null;
-  try {
-    insights = useInsights();
-  } catch {
-    // InsightsProvider might not be available in all contexts
-    insights = null;
-  }
+  // Get insights recommendations if available - always call hook at top level
+  const insights = useInsights();
   
   const insightRecommendations = useMemo(() => {
     if (!insights) return [];
-    return insights.convertToNutritionRecommendations();
+    try {
+      return insights.convertToNutritionRecommendations();
+    } catch {
+      return [];
+    }
   }, [insights]);
 
   const loadData = useCallback(async () => {
     try {
-      await measureAsyncPerformance('loadNutritionData', async () => {
-        const [storedLog, storedProfile] = await Promise.all([
-          AsyncStorage.getItem('foodLog'),
-          AsyncStorage.getItem('userProfile')
-        ]);
-        
-        if (storedLog) {
-          setFoodLog(JSON.parse(storedLog));
-        }
-        
-        if (storedProfile) {
-          setProfile(JSON.parse(storedProfile));
-        }
-      });
+      const [storedLog, storedProfile] = await Promise.all([
+        AsyncStorage.getItem('foodLog'),
+        AsyncStorage.getItem('userProfile')
+      ]);
+      
+      if (storedLog) {
+        const parsedLog = JSON.parse(storedLog);
+        setFoodLog(parsedLog);
+      }
+      
+      if (storedProfile) {
+        const parsedProfile = JSON.parse(storedProfile);
+        setProfile(parsedProfile);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -66,12 +64,11 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
 
 
   const saveFoodLog = useCallback(async (log: FoodLogEntry[]) => {
-    // Use batched AsyncStorage operation for better performance
-    asyncStorageBatch.add(async () => {
-      await measureAsyncPerformance('saveFoodLog', async () => {
-        await AsyncStorage.setItem('foodLog', JSON.stringify(log));
-      });
-    });
+    try {
+      await AsyncStorage.setItem('foodLog', JSON.stringify(log));
+    } catch (error) {
+      console.error('Error saving food log:', error);
+    }
   }, []);
 
   // Optimized today intake calculation with caching
@@ -143,11 +140,11 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const clearLog = useCallback(async () => {
     setFoodLog([]);
     
-    asyncStorageBatch.add(async () => {
-      await measureAsyncPerformance('clearFoodLog', async () => {
-        await AsyncStorage.removeItem('foodLog');
-      });
-    });
+    try {
+      await AsyncStorage.removeItem('foodLog');
+    } catch (error) {
+      console.error('Error clearing food log:', error);
+    }
   }, []);
 
   // Extract lab values for stable dependencies (optimized)
@@ -165,8 +162,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const recommendations = useMemo(() => {
     if (isLoading) return [];
     
-    // Create cache key
-    const cacheKey = `${todayIntake.potassium}-${todayIntake.phosphorus}-${todayIntake.fluid}-${todayIntake.protein}-${labValues.hemoglobin}-${labValues.calcium}-${labValues.vitaminD}`;
+    // Create cache key with rounded values to improve cache hits
+    const cacheKey = `${Math.round(todayIntake.potassium)}-${Math.round(todayIntake.phosphorus)}-${Math.round(todayIntake.fluid)}-${Math.round(todayIntake.protein)}-${labValues.hemoglobin || 0}-${labValues.calcium || 0}-${labValues.vitaminD || 0}`;
     
     // Check cache
     if (recommendationsCache.current?.key === cacheKey) {
