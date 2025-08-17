@@ -5,7 +5,7 @@ export const quickMeals = [
     nameNe: 'दाल भात',
     emoji: '🍛',
     time: 'Morning',
-    foodIds: ['dal', 'rice-white'],
+    foodIds: ['dal-masoor', 'rice-white'],
   },
   {
     id: 'breakfast-roti',
@@ -13,7 +13,7 @@ export const quickMeals = [
     nameNe: 'रोटी र अण्डा',
     emoji: '🍳',
     time: 'Morning',
-    foodIds: ['roti', 'egg'],
+    foodIds: ['roti', 'egg-whole'],
   },
   {
     id: 'lunch-momo',
@@ -21,7 +21,7 @@ export const quickMeals = [
     nameNe: 'मोमो',
     emoji: '🥟',
     time: 'Lunch',
-    foodIds: ['momo'],
+    foodIds: ['momo-steamed'],
   },
   {
     id: 'snack-tea',
@@ -37,6 +37,6 @@ export const quickMeals = [
     nameNe: 'कुखुरा',
     emoji: '🍗',
     time: 'Dinner',
-    foodIds: ['chicken'],
+    foodIds: ['chicken-breast'],
   },
 ];

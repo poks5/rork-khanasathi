@@ -1,12 +1,66 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { useNutrition } from '@/providers/NutritionProvider';
 import { colors } from '@/constants/colors';
 import { quickMeals } from '@/data/quickMeals';
+import { foodDatabase } from '@/data/foodDatabase';
+import { MealType } from '@/types/food';
 
 export function QuickAddCard() {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
+  const { addToLog } = useNutrition();
+
+  const handleQuickAdd = (meal: typeof quickMeals[0]) => {
+    console.log('Quick add clicked for meal:', meal.nameEn);
+    
+    // If meal has multiple foods, add them all
+    if (meal.foodIds.length > 1) {
+      meal.foodIds.forEach(foodId => {
+        const food = foodDatabase.find(f => f.id === foodId);
+        if (food) {
+          console.log('Adding food to log:', food.nameEn);
+          
+          // Determine meal type based on time
+          let mealType: MealType = 'breakfast';
+          if (meal.time === 'Lunch') mealType = 'lunch';
+          else if (meal.time === 'Dinner') mealType = 'dinner';
+          else if (meal.time === 'Evening') mealType = 'snacks';
+          
+          addToLog({
+            foodId: food.id,
+            foodName: language === 'en' ? food.nameEn : food.nameNe,
+            quantity: food.defaultPortion,
+            unit: language === 'en' ? food.unitEn : food.unitNe,
+            mealType,
+            nutrients: {
+              calories: food.nutrients.calories * food.defaultPortion,
+              protein: food.nutrients.protein * food.defaultPortion,
+              carbohydrates: food.nutrients.carbohydrates * food.defaultPortion,
+              fat: food.nutrients.fat * food.defaultPortion,
+              fiber: food.nutrients.fiber * food.defaultPortion,
+              potassium: food.nutrients.potassium * food.defaultPortion,
+              phosphorus: food.nutrients.phosphorus * food.defaultPortion,
+              sodium: food.nutrients.sodium * food.defaultPortion,
+              calcium: food.nutrients.calcium * food.defaultPortion,
+              fluid: food.nutrients.fluid * food.defaultPortion,
+              iron: food.nutrients.iron * food.defaultPortion,
+              zinc: food.nutrients.zinc * food.defaultPortion,
+            },
+          });
+        } else {
+          console.error('Food not found:', foodId);
+        }
+      });
+    } else {
+      // Single food - navigate to add-food page for customization
+      router.push({
+        pathname: '/add-food' as any,
+        params: { foodId: meal.foodIds[0] }
+      });
+    }
+  };
 
   return (
     <ScrollView 
@@ -18,10 +72,7 @@ export function QuickAddCard() {
         <TouchableOpacity
           key={meal.id}
           style={styles.mealCard}
-          onPress={() => router.push({
-            pathname: 'add-food' as any,
-            params: { foodId: meal.foodIds[0] }
-          })}
+          onPress={() => handleQuickAdd(meal)}
         >
           <Text style={styles.emoji}>{meal.emoji}</Text>
           <Text style={styles.mealName}>
