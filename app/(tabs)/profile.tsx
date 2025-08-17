@@ -191,6 +191,27 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
           <Text style={styles.resetButtonText}>{t('profile.resetData')}</Text>
         </TouchableOpacity>
+
+        <View
+          testID="medical-disclaimer"
+          accessibilityLabel="Medical disclaimer"
+          style={styles.disclaimerBox}
+        >
+          <View style={styles.sectionHeader}>
+            <AlertCircle size={18} color={colors.warning} />
+            <Text style={styles.disclaimerTitle}>Medical Disclaimer</Text>
+          </View>
+          <Text style={styles.disclaimerText}>
+            This app provides general nutrition and wellness information for educational
+            purposes only and is not a substitute for professional medical advice,
+            diagnosis, or treatment. Always seek the advice of your physician or
+            other qualified health provider with any questions regarding a medical
+            condition, diet, or treatment decisions. Never disregard professional
+            medical advice or delay seeking it because of something you have read
+            in this app. If you think you may have a medical emergency, call your
+            doctor or local emergency number immediately.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -317,6 +338,27 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginTop: 15,
+  },
+  disclaimerBox: {
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  disclaimerTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: colors.text,
+  },
+  disclaimerText: {
+    marginTop: 8,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.textSecondary,
   },
   infoText: {
     flex: 1,
