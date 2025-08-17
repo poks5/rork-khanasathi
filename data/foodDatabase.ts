@@ -610,6 +610,83 @@ export const foodDatabase: Food[] = [
     },
     safetyLevel: 'safe',
   },
+  {
+    id: 'rayo-ko-saag',
+    nameEn: 'Rayo Ko Saag (Mustard Greens)',
+    nameNe: 'रायोको साग',
+    category: 'vegetables',
+    subcategory: 'leafy-greens',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/zlscky7tjdsk3hx7ub9jc',
+    defaultPortion: 100,
+    unitEn: 'grams',
+    unitNe: 'ग्राम',
+    weightGrams: 100,
+    nutrients: {
+      calories: 27,
+      protein: 2.9,
+      carbohydrates: 4.7,
+      fat: 0.4,
+      fiber: 3.2,
+      potassium: 354,
+      phosphorus: 58,
+      sodium: 25,
+      calcium: 183,
+      fluid: 90,
+      iron: 1.6,
+      zinc: 0.2,
+    },
+    safetyLevel: 'caution',
+    preparationTips: [
+      { en: 'Blanch and drain to reduce potassium by 30%', ne: 'पोटासियम ३०% कम गर्न उमालेर पानी फाल्नुहोस्' },
+      { en: 'Use small amounts as seasoning with other vegetables', ne: 'अन्य तरकारीसँग मसलाको रूपमा थोरै प्रयोग गर्नुहोस्' },
+    ],
+    medicalNotes: [
+      { en: 'High potassium leafy green - limit portions', ne: 'उच्च पोटासियम पातेदार साग - मात्रा सीमित गर्नुहोस्' },
+    ],
+    alternativeNames: {
+      en: ['mustard greens', 'mustard leaves', 'sarson saag'],
+      ne: ['तोरीको साग', 'सर्सों साग']
+    },
+  },
+  {
+    id: 'farsi-ko-munta',
+    nameEn: 'Farsi Ko Munta (Pumpkin Leaves)',
+    nameNe: 'फर्सीको मुन्टा',
+    category: 'vegetables',
+    subcategory: 'leafy-greens',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/rprhiwu99eru3fpylgbfa',
+    defaultPortion: 100,
+    unitEn: 'grams',
+    unitNe: 'ग्राम',
+    weightGrams: 100,
+    nutrients: {
+      calories: 19,
+      protein: 2.2,
+      carbohydrates: 3.4,
+      fat: 0.3,
+      fiber: 2.1,
+      potassium: 436,
+      phosphorus: 44,
+      sodium: 6,
+      calcium: 77,
+      fluid: 92,
+      iron: 0.8,
+      zinc: 0.2,
+    },
+    safetyLevel: 'caution',
+    preparationTips: [
+      { en: 'Blanch well and drain to reduce potassium content', ne: 'पोटासियम कम गर्न राम्रोसँग उमालेर पानी फाल्नुहोस्' },
+      { en: 'Mix with low-potassium vegetables to balance nutrients', ne: 'पोषक तत्व सन्तुलन गर्न कम पोटासियम तरकारीसँग मिसाउनुहोस्' },
+      { en: 'Use young tender leaves for better taste and nutrition', ne: 'राम्रो स्वाद र पोषणको लागि कोमल पातहरू प्रयोग गर्नुहोस्' },
+    ],
+    medicalNotes: [
+      { en: 'High potassium content - portion control essential for CKD patients', ne: 'उच्च पोटासियम सामग्री - CKD बिरामीहरूका लागि मात्रा नियन्त्रण आवश्यक' },
+    ],
+    alternativeNames: {
+      en: ['pumpkin leaves', 'squash leaves', 'gourd leaves'],
+      ne: ['कद्दूको पात', 'फर्सीको पात']
+    },
+  },
 
   // VEGETABLES - MEDIUM POTASSIUM (CAUTION)
   {
