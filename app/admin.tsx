@@ -149,8 +149,11 @@ export default function AdminPanel() {
       const dataToExport = {
         timestamp: new Date().toISOString(),
         overrides: foodOverrides,
+        totalOverrides: Object.keys(foodOverrides).length,
       };
       const jsonString = JSON.stringify(dataToExport, null, 2);
+      
+      console.log('Exporting data:', dataToExport);
       
       // Try to copy to clipboard
       if (Platform.OS === 'web') {
@@ -158,38 +161,68 @@ export default function AdminPanel() {
         await Clipboard.setStringAsync(jsonString);
         Alert.alert(
           'Export Successful',
-          'Food override data has been copied to your clipboard. You can paste it anywhere to save or share.'
+          `Food override data (${Object.keys(foodOverrides).length} items) has been copied to your clipboard. You can paste it anywhere to save or share.`
         );
       } else {
         // For mobile, copy to clipboard and also log
         await Clipboard.setStringAsync(jsonString);
-        console.log('Food overrides data:', jsonString);
+        console.log('Food overrides data exported:', jsonString);
         Alert.alert(
           'Export Successful',
-          'Food override data has been copied to your clipboard and logged to console.'
+          `Food override data (${Object.keys(foodOverrides).length} items) has been copied to your clipboard and logged to console.`
         );
       }
     } catch (error) {
       console.error('Export error:', error);
-      // Fallback: just show the data in an alert for small datasets
+      
+      // Fallback: Create downloadable content for web or show in alert
       const dataToExport = {
         timestamp: new Date().toISOString(),
         overrides: foodOverrides,
+        totalOverrides: Object.keys(foodOverrides).length,
       };
       const jsonString = JSON.stringify(dataToExport, null, 2);
       
-      if (jsonString.length < 1000) {
-        Alert.alert(
-          'Export Data',
-          `Copy this data:\n\n${jsonString}`,
-          [{ text: 'OK' }]
-        );
+      if (Platform.OS === 'web') {
+        // For web, create a downloadable file as fallback
+        try {
+          const blob = new Blob([jsonString], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `food-overrides-${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          Alert.alert(
+            'Export Successful',
+            'Food override data has been downloaded as a JSON file.'
+          );
+        } catch (downloadError) {
+          console.error('Download fallback failed:', downloadError);
+          Alert.alert(
+            'Export Data',
+            `Copy this data manually:\n\n${jsonString.substring(0, 500)}${jsonString.length > 500 ? '...' : ''}`,
+            [{ text: 'OK' }]
+          );
+        }
       } else {
-        Alert.alert(
-          'Export Error',
-          'Failed to copy to clipboard. Please check the console for the exported data.'
-        );
-        console.log('Food overrides data:', jsonString);
+        // For mobile, show in alert if small enough
+        if (jsonString.length < 1000) {
+          Alert.alert(
+            'Export Data',
+            `Copy this data:\n\n${jsonString}`,
+            [{ text: 'OK' }]
+          );
+        } else {
+          Alert.alert(
+            'Export Error',
+            'Failed to copy to clipboard. Please check the console for the exported data.'
+          );
+          console.log('Food overrides data:', jsonString);
+        }
       }
     }
   };
