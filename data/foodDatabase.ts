@@ -1570,7 +1570,7 @@ export const foodDatabase: Food[] = [
     nameNe: 'परम्परागत ग्रामीण नेपाली खाना - किण्वित साग र कोदोको ढिडो',
     category: 'traditional',
     subcategory: 'rural-foods',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=200',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/uyjwcdbg7s1oe4ru7hybi',
     defaultPortion: 1,
     unitEn: 'bowl',
     unitNe: 'कचौरा',
