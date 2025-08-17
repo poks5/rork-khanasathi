@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search } from "lucide-react-native";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { colors } from "@/constants/colors";
@@ -18,6 +19,7 @@ import { getSafetyLevel } from "@/utils/safetyUtils";
 
 export default function FoodsScreen() {
   const { t, language } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<FoodCategory | 'all'>('all');
 
@@ -46,7 +48,8 @@ export default function FoodsScreen() {
 
   return (
     <View style={styles.container} testID="foods-screen">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: 12 + insets.top }]}
+        >
         <Text style={styles.title}>{t('foods.title')}</Text>
         <View style={styles.searchContainer}>
           <Search size={20} color={colors.textSecondary} />
@@ -91,7 +94,10 @@ export default function FoodsScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.foodScrollView}
-        contentContainerStyle={styles.foodScrollViewContent}
+        contentContainerStyle={[
+          styles.foodScrollViewContent,
+          { paddingBottom: Math.max(insets.bottom, 12) + 84 }
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.foodGrid}>
@@ -198,7 +204,6 @@ const styles = StyleSheet.create({
   },
   foodScrollViewContent: {
     paddingBottom: 96,
-    flexGrow: 1,
   },
   foodGrid: {
     flexDirection: 'row',
