@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
-import { UserProfile, DailyLimits, LabValue, MedicalCondition, Medication, DietaryRestriction } from '@/types/user';
+import { UserProfile, DailyLimits } from '@/types/user';
+import { asyncStorageBatch, measureAsyncPerformance } from '@/utils/performance';
 
 const defaultLimits: DailyLimits = {
   potassium: 2000,
@@ -33,45 +34,50 @@ export const [UserProfileProvider, useUserProfile] = createContextHook(() => {
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
-      const stored = await AsyncStorage.getItem('userProfile');
-      if (stored) {
-        setProfile(JSON.parse(stored));
-      }
+      await measureAsyncPerformance('loadUserProfile', async () => {
+        const stored = await AsyncStorage.getItem('userProfile');
+        if (stored) {
+          setProfile(JSON.parse(stored));
+        }
+      });
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const updateProfile = async (newProfile: UserProfile) => {
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  const updateProfile = useCallback(async (newProfile: UserProfile) => {
     setProfile(newProfile);
-    try {
-      await AsyncStorage.setItem('userProfile', JSON.stringify(newProfile));
-    } catch (error) {
-      console.error('Error saving profile:', error);
-    }
-  };
+    
+    // Use batched AsyncStorage operation for better performance
+    asyncStorageBatch.add(async () => {
+      await measureAsyncPerformance('saveUserProfile', async () => {
+        await AsyncStorage.setItem('userProfile', JSON.stringify(newProfile));
+      });
+    });
+  }, []);
 
-  const resetProfile = async () => {
+  const resetProfile = useCallback(async () => {
     setProfile(defaultProfile);
-    try {
-      await AsyncStorage.removeItem('userProfile');
-    } catch (error) {
-      console.error('Error resetting profile:', error);
-    }
-  };
+    
+    asyncStorageBatch.add(async () => {
+      await measureAsyncPerformance('resetUserProfile', async () => {
+        await AsyncStorage.removeItem('userProfile');
+      });
+    });
+  }, []);
 
-  return {
+  return useMemo(() => ({
     profile,
     updateProfile,
     resetProfile,
     isLoading,
-  };
+  }), [profile, updateProfile, resetProfile, isLoading]);
 });

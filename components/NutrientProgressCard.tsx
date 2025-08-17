@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
 
@@ -13,18 +13,29 @@ interface NutrientProgressCardProps {
   };
 }
 
-export function NutrientProgressCard({ nutrient }: NutrientProgressCardProps) {
-  const percentage = Math.min((nutrient.current / nutrient.limit) * 100, 100);
-  const isWarning = percentage > 80;
-  const isDanger = percentage > 100;
+const NutrientProgressCardComponent = ({ nutrient }: NutrientProgressCardProps) => {
+  // Memoize calculations to prevent recalculation on every render
+  const { percentage, indicatorColor, currentText, limitText } = useMemo(() => {
+    const pct = Math.min((nutrient.current / nutrient.limit) * 100, 100);
+    const warning = pct > 80;
+    const danger = pct > 100;
+    const indicator = danger ? colors.danger : warning ? colors.warning : colors.success;
+    const current = `${nutrient.current.toFixed(0)} ${nutrient.unit}`;
+    const limit = `/ ${nutrient.limit} ${nutrient.unit}`;
+    
+    return {
+      percentage: pct,
+      indicatorColor: indicator,
+      currentText: current,
+      limitText: limit
+    };
+  }, [nutrient]);
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.name}>{nutrient.name}</Text>
-        <View style={[styles.indicator, {
-          backgroundColor: isDanger ? colors.danger : isWarning ? colors.warning : colors.success
-        }]} />
+        <View style={[styles.indicator, { backgroundColor: indicatorColor }]} />
       </View>
       
       <View style={styles.progressContainer}>
@@ -39,16 +50,16 @@ export function NutrientProgressCard({ nutrient }: NutrientProgressCardProps) {
       </View>
       
       <View style={styles.values}>
-        <Text style={styles.current}>
-          {nutrient.current.toFixed(0)} {nutrient.unit}
-        </Text>
-        <Text style={styles.limit}>
-          / {nutrient.limit} {nutrient.unit}
-        </Text>
+        <Text style={styles.current}>{currentText}</Text>
+        <Text style={styles.limit}>{limitText}</Text>
       </View>
     </View>
   );
-}
+};
+
+NutrientProgressCardComponent.displayName = 'NutrientProgressCard';
+
+export const NutrientProgressCard = React.memo(NutrientProgressCardComponent);
 
 const styles = StyleSheet.create({
   card: {

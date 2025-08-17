@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { FoodLogEntry, NutrientIntake, NutritionRecommendation } from '@/types/food';
 import { UserProfile, DailyLimits } from '@/types/user';
 import { useInsights } from '@/providers/InsightsProvider';
+import { asyncStorageBatch, measureAsyncPerformance } from '@/utils/performance';
 
 const defaultLimits: DailyLimits = {
   potassium: 2000,
@@ -18,59 +19,72 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const todayIntakeCache = useRef<{ date: string; intake: NutrientIntake } | null>(null);
+  const recommendationsCache = useRef<{ key: string; recommendations: NutritionRecommendation[] } | null>(null);
   
-  // Get insights recommendations if available
-  let insightRecommendations: NutritionRecommendation[] = [];
-  try {
-    const insights = useInsights();
-    insightRecommendations = insights.convertToNutritionRecommendations();
-  } catch {
-    // InsightsProvider might not be available in all contexts
-    console.log('InsightsProvider not available in this context');
-  }
+  // Get insights recommendations if available (memoized)
+  const insightRecommendations = useMemo(() => {
+    try {
+      const insights = useInsights();
+      return insights.convertToNutritionRecommendations();
+    } catch {
+      // InsightsProvider might not be available in all contexts
+      return [];
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      const [storedLog, storedProfile] = await Promise.all([
-        AsyncStorage.getItem('foodLog'),
-        AsyncStorage.getItem('userProfile')
-      ]);
-      
-      if (storedLog) {
-        setFoodLog(JSON.parse(storedLog));
-      }
-      
-      if (storedProfile) {
-        setProfile(JSON.parse(storedProfile));
-      }
+      await measureAsyncPerformance('loadNutritionData', async () => {
+        const [storedLog, storedProfile] = await Promise.all([
+          AsyncStorage.getItem('foodLog'),
+          AsyncStorage.getItem('userProfile')
+        ]);
+        
+        if (storedLog) {
+          setFoodLog(JSON.parse(storedLog));
+        }
+        
+        if (storedProfile) {
+          setProfile(JSON.parse(storedProfile));
+        }
+      });
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
 
 
-  const saveFoodLog = async (log: FoodLogEntry[]) => {
-    try {
-      await AsyncStorage.setItem('foodLog', JSON.stringify(log));
-    } catch (error) {
-      console.error('Error saving food log:', error);
-    }
-  };
+  const saveFoodLog = useCallback(async (log: FoodLogEntry[]) => {
+    // Use batched AsyncStorage operation for better performance
+    asyncStorageBatch.add(async () => {
+      await measureAsyncPerformance('saveFoodLog', async () => {
+        await AsyncStorage.setItem('foodLog', JSON.stringify(log));
+      });
+    });
+  }, []);
 
+  // Optimized today intake calculation with caching
   const todayIntake = useMemo((): NutrientIntake => {
     const today = new Date().toDateString();
+    
+    // Check cache first
+    if (todayIntakeCache.current?.date === today) {
+      return todayIntakeCache.current.intake;
+    }
+    
     const todayEntries = foodLog.filter(
       entry => new Date(entry.timestamp).toDateString() === today
     );
 
-    return todayEntries.reduce(
+    const intake = todayEntries.reduce(
       (acc, entry) => ({
         calories: acc.calories + entry.nutrients.calories,
         protein: acc.protein + entry.nutrients.protein,
@@ -100,6 +114,10 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
         zinc: 0,
       }
     );
+    
+    // Cache the result
+    todayIntakeCache.current = { date: today, intake };
+    return intake;
   }, [foodLog]);
 
   const addToLog = useCallback((entry: Omit<FoodLogEntry, 'id' | 'timestamp'>) => {
@@ -121,21 +139,36 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
 
   const clearLog = useCallback(async () => {
     setFoodLog([]);
-    try {
-      await AsyncStorage.removeItem('foodLog');
-    } catch (error) {
-      console.error('Error clearing food log:', error);
-    }
+    
+    asyncStorageBatch.add(async () => {
+      await measureAsyncPerformance('clearFoodLog', async () => {
+        await AsyncStorage.removeItem('foodLog');
+      });
+    });
   }, []);
 
-  // Extract lab values for stable dependencies
-  const hemoglobinValue = useMemo(() => profile?.labValues?.find(lab => lab.name === 'hemoglobin')?.value, [profile?.labValues]);
-  const calciumValue = useMemo(() => profile?.labValues?.find(lab => lab.name === 'calcium')?.value, [profile?.labValues]);
-  const vitaminDValue = useMemo(() => profile?.labValues?.find(lab => lab.name === 'vitamin_d')?.value, [profile?.labValues]);
+  // Extract lab values for stable dependencies (optimized)
+  const labValues = useMemo(() => {
+    if (!profile?.labValues) return { hemoglobin: undefined, calcium: undefined, vitaminD: undefined };
+    
+    const hemoglobin = profile.labValues.find(lab => lab.name === 'hemoglobin')?.value;
+    const calcium = profile.labValues.find(lab => lab.name === 'calcium')?.value;
+    const vitaminD = profile.labValues.find(lab => lab.name === 'vitamin_d')?.value;
+    
+    return { hemoglobin, calcium, vitaminD };
+  }, [profile?.labValues]);
 
-  // Generate recommendations based on user profile and food log
+  // Generate recommendations based on user profile and food log (optimized with caching)
   const recommendations = useMemo(() => {
     if (isLoading) return [];
+    
+    // Create cache key
+    const cacheKey = `${todayIntake.potassium}-${todayIntake.phosphorus}-${todayIntake.fluid}-${todayIntake.protein}-${labValues.hemoglobin}-${labValues.calcium}-${labValues.vitaminD}`;
+    
+    // Check cache
+    if (recommendationsCache.current?.key === cacheKey) {
+      return [...recommendationsCache.current.recommendations, ...insightRecommendations];
+    }
     
     const currentProfile = profile || {
       dailyLimits: defaultLimits,
@@ -240,8 +273,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     // Add more recommendations based on lab values if available
     if (currentProfile.labValues && currentProfile.labValues.length > 0) {
       // Check for anemia
-      const hemoglobin = currentProfile.labValues.find(lab => lab.name === 'hemoglobin');
-      if (hemoglobin && hemoglobin.value < 11) {
+      if (labValues.hemoglobin && labValues.hemoglobin < 11) {
         dynamicRecommendations.push({
           id: 'anemia-management',
           category: 'anemia-management',
@@ -250,8 +282,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
             ne: 'रक्तअल्पता व्यवस्थापन'
           },
           description: {
-            en: `Your hemoglobin level is ${hemoglobin.value} g/dL, which indicates anemia. Focus on iron-rich foods.`,
-            ne: `तपाईंको हिमोग्लोबिन स्तर ${hemoglobin.value} g/dL छ, जसले रक्तअल्पता संकेत गर्छ। फलामयुक्त खानेकुरामा ध्यान दिनुहोस्।`
+            en: `Your hemoglobin level is ${labValues.hemoglobin} g/dL, which indicates anemia. Focus on iron-rich foods.`,
+            ne: `तपाईंको हिमोग्लोबिन स्तर ${labValues.hemoglobin} g/dL छ, जसले रक्तअल्पता संकेत गर्छ। फलामयुक्त खानेकुरामा ध्यान दिनुहोस्।`
           },
           priority: 'high',
           basedOn: ['hemoglobin'],
@@ -264,9 +296,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
       
       // Check for bone health
-      const calcium = currentProfile.labValues.find(lab => lab.name === 'calcium');
-      const vitaminD = currentProfile.labValues.find(lab => lab.name === 'vitamin_d');
-      if ((calcium && calcium.value < 8.5) || (vitaminD && vitaminD.value < 20)) {
+      if ((labValues.calcium && labValues.calcium < 8.5) || (labValues.vitaminD && labValues.vitaminD < 20)) {
         dynamicRecommendations.push({
           id: 'bone-health',
           category: 'bone-health',
@@ -711,13 +741,17 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
     ];
 
+    // Cache the result
+    const allRecommendations = [...dynamicRecommendations, ...staticRecommendations];
+    recommendationsCache.current = { key: cacheKey, recommendations: allRecommendations };
+    
     // Combine all recommendations: dynamic, static, and insights
-    return [...dynamicRecommendations, ...staticRecommendations, ...insightRecommendations];
+    return [...allRecommendations, ...insightRecommendations];
   }, [
     profile,
-    hemoglobinValue,
-    calciumValue,
-    vitaminDValue,
+    labValues.hemoglobin,
+    labValues.calcium,
+    labValues.vitaminD,
     todayIntake.potassium, 
     todayIntake.phosphorus, 
     todayIntake.fluid, 

@@ -15,24 +15,47 @@ interface FoodOverride {
 }
 
 let foodOverrides: Record<string, FoodOverride> = {};
+let overridesLoaded = false;
 
-// Load overrides from storage
+// Load overrides from storage (lazy)
 const loadFoodOverrides = async () => {
+  if (overridesLoaded) return;
+  
   try {
     const stored = await AsyncStorage.getItem(ADMIN_FOODS_KEY);
     if (stored) {
       foodOverrides = JSON.parse(stored);
     }
+    overridesLoaded = true;
   } catch (error) {
     console.error('Failed to load food overrides:', error);
+    overridesLoaded = true; // Prevent infinite retries
   }
 };
 
-// Initialize overrides
-loadFoodOverrides();
+// Function to apply overrides to a food item (async for lazy loading)
+const applyOverrides = async (food: Food): Promise<Food> => {
+  await loadFoodOverrides();
+  
+  const override = foodOverrides[food.id];
+  if (!override) return food;
 
-// Function to apply overrides to a food item
-const applyOverrides = (food: Food): Food => {
+  return {
+    ...food,
+    ...(override.image && { image: override.image }),
+    ...(override.nameEn && { nameEn: override.nameEn }),
+    ...(override.nameNe && { nameNe: override.nameNe }),
+    ...(override.safetyLevel && { safetyLevel: override.safetyLevel }),
+    ...(override.nutrients && { nutrients: { ...food.nutrients, ...override.nutrients } }),
+    ...(override.preparationTips && { preparationTips: override.preparationTips }),
+    ...(override.medicalNotes && { medicalNotes: override.medicalNotes }),
+  };
+};
+
+// Synchronous version for immediate use (without overrides)
+const applyOverridesSync = (food: Food): Food => {
+  if (!overridesLoaded) return food;
+  
   const override = foodOverrides[food.id];
   if (!override) return food;
 
@@ -2685,22 +2708,22 @@ export const foodDatabase: Food[] = [
   },
 ];
 
-// Helper functions for food database queries
+// Helper functions for food database queries (optimized)
 export function getFoodsByCategory(category: string): Food[] {
-  return foodDatabase.filter(food => food.category === category).map(applyOverrides);
+  return foodDatabase.filter(food => food.category === category).map(applyOverridesSync);
 }
 
 export function getFoodsBySubcategory(subcategory: string): Food[] {
-  return foodDatabase.filter(food => food.subcategory === subcategory).map(applyOverrides);
+  return foodDatabase.filter(food => food.subcategory === subcategory).map(applyOverridesSync);
 }
 
 export function getFoodsBySafetyLevel(safetyLevel: 'safe' | 'caution' | 'avoid'): Food[] {
-  return foodDatabase.map(applyOverrides).filter(food => food.safetyLevel === safetyLevel);
+  return foodDatabase.map(applyOverridesSync).filter(food => food.safetyLevel === safetyLevel);
 }
 
 export function searchFoods(query: string, language: 'en' | 'ne' = 'en'): Food[] {
   const searchTerm = query.toLowerCase();
-  return foodDatabase.map(applyOverrides).filter(food => {
+  return foodDatabase.map(applyOverridesSync).filter(food => {
     const nameMatch = language === 'en' 
       ? food.nameEn.toLowerCase().includes(searchTerm)
       : food.nameNe.includes(searchTerm);
@@ -2717,7 +2740,13 @@ export function searchFoods(query: string, language: 'en' | 'ne' = 'en'): Food[]
 
 export function getFoodById(id: string): Food | undefined {
   const food = foodDatabase.find(food => food.id === id);
-  return food ? applyOverrides(food) : undefined;
+  return food ? applyOverridesSync(food) : undefined;
+}
+
+// Async versions for when overrides are needed
+export async function getFoodByIdAsync(id: string): Promise<Food | undefined> {
+  const food = foodDatabase.find(food => food.id === id);
+  return food ? await applyOverrides(food) : undefined;
 }
 
 // Nutritional analysis helpers
@@ -2759,7 +2788,18 @@ export const refreshFoodOverrides = async () => {
   await loadFoodOverrides();
 };
 
-// Get all foods with overrides applied
+// Get all foods with overrides applied (optimized)
 export function getAllFoods(): Food[] {
-  return foodDatabase.map(applyOverrides);
+  return foodDatabase.map(applyOverridesSync);
 }
+
+// Async version for when overrides are needed
+export async function getAllFoodsAsync(): Promise<Food[]> {
+  await loadFoodOverrides();
+  return foodDatabase.map(applyOverridesSync);
+}
+
+// Initialize overrides loading in background
+setTimeout(() => {
+  loadFoodOverrides();
+}, 100);

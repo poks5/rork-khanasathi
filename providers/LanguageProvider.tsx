@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { translations } from '@/data/translations';
+import { asyncStorageBatch, measureAsyncPerformance } from '@/utils/performance';
 
 type Language = 'en' | 'ne';
 
@@ -9,31 +10,35 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
   const [language, setLanguage] = useState<Language>('en');
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
+  const loadLanguage = useCallback(async () => {
     try {
-      const stored = await AsyncStorage.getItem('language');
-      if (stored) {
-        setLanguage(stored as Language);
-      }
+      await measureAsyncPerformance('loadLanguage', async () => {
+        const stored = await AsyncStorage.getItem('language');
+        if (stored) {
+          setLanguage(stored as Language);
+        }
+      });
     } catch (error) {
       console.error('Error loading language:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadLanguage();
+  }, [loadLanguage]);
 
   const toggleLanguage = useCallback(async () => {
     const newLang: Language = language === 'en' ? 'ne' : 'en';
     setLanguage(newLang);
-    try {
-      await AsyncStorage.setItem('language', newLang);
-    } catch (error) {
-      console.error('Error saving language:', error);
-    }
+    
+    // Use batched AsyncStorage operation
+    asyncStorageBatch.add(async () => {
+      await measureAsyncPerformance('saveLanguage', async () => {
+        await AsyncStorage.setItem('language', newLang);
+      });
+    });
   }, [language]);
 
   const t = useCallback((key: string): string => {

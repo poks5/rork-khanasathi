@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -17,12 +17,13 @@ import { DailyTipCard } from "@/components/DailyTipCard";
 import { Plus, Globe } from "lucide-react-native";
 import { router } from "expo-router";
 
-export default function HomeScreen() {
+const HomeScreen = React.memo(() => {
   const { t, language, toggleLanguage } = useLanguage();
   const { todayIntake, dailyLimits } = useNutrition();
   const { profile } = useUserProfile();
 
-  const nutrients = [
+  // Memoize nutrients array to prevent recreation on every render
+  const nutrients = useMemo(() => [
     {
       key: 'potassium',
       name: t('nutrients.potassium'),
@@ -71,7 +72,12 @@ export default function HomeScreen() {
       limit: dailyLimits.fluid,
       color: colors.nutrients.fluid,
     },
-  ];
+  ], [t, todayIntake, dailyLimits]);
+
+  // Memoize navigation callback
+  const handleAddFood = useCallback(() => {
+    router.push('add-food' as any);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -114,14 +120,16 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => router.push('add-food' as any)}
+        onPress={handleAddFood}
         testID="add-food-fab"
       >
         <Plus size={28} color={colors.white} />
       </TouchableOpacity>
     </SafeAreaView>
   );
-}
+});
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
