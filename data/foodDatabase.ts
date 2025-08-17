@@ -1627,6 +1627,44 @@ export const foodDatabase: Food[] = [
       { en: 'Very high sodium - use sparingly as condiment', ne: 'धेरै उच्च सोडियम - मसलाको रूपमा थोरै प्रयोग गर्नुहोस्' },
     ],
   },
+  {
+    id: 'bhuteko-makai',
+    nameEn: 'Bhuteko Makai (Popped Corn)',
+    nameNe: 'भुटेको मकै',
+    category: 'snacks',
+    subcategory: 'traditional-snacks',
+    image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/nzse5o7qd3qujib26glf6',
+    defaultPortion: 30,
+    unitEn: 'grams',
+    unitNe: 'ग्राम',
+    weightGrams: 30,
+    nutrients: {
+      calories: 110,
+      protein: 3.3,
+      carbohydrates: 22,
+      fat: 1.2,
+      fiber: 4.1,
+      potassium: 93,
+      phosphorus: 98,
+      sodium: 2,
+      calcium: 1,
+      fluid: 3,
+      iron: 0.9,
+      zinc: 0.9,
+    },
+    safetyLevel: 'safe',
+    preparationTips: [
+      { en: 'Air-popped without oil is healthiest option', ne: 'तेल बिना हावामा फुलाएको सबैभन्दा स्वस्थ विकल्प हो' },
+      { en: 'Avoid adding salt or butter', ne: 'नुन वा मक्खन नथप्नुहोस्' },
+    ],
+    medicalNotes: [
+      { en: 'Good low-sodium snack option with fiber', ne: 'फाइबर सहितको राम्रो कम सोडियम खाजा' },
+    ],
+    alternativeNames: {
+      en: ['popcorn', 'puffed corn', 'popped maize'],
+      ne: ['पप कर्न', 'फुलेको मकै']
+    },
+  },
 
   // NUTS & SEEDS (Limited portions)
   {
