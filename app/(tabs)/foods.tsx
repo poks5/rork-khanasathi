@@ -6,9 +6,9 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  SafeAreaView,
   Image,
 } from "react-native";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search } from "lucide-react-native";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { colors } from "@/constants/colors";
@@ -19,7 +19,6 @@ import { getSafetyLevel } from "@/utils/safetyUtils";
 
 export default function FoodsScreen() {
   const { t, language } = useLanguage();
-  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<FoodCategory | 'all'>('all');
 
@@ -47,9 +46,8 @@ export default function FoodsScreen() {
   }, [searchQuery, selectedCategory]);
 
   return (
-    <View style={styles.container} testID="foods-screen">
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}
-        >
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
         <Text style={styles.title}>{t('foods.title')}</Text>
         <View style={styles.searchContainer}>
           <Search size={20} color={colors.textSecondary} />
@@ -59,17 +57,15 @@ export default function FoodsScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor={colors.textSecondary}
-            testID="foods-search-input"
           />
         </View>
       </View>
 
-      <ScrollView
-        horizontal
+      <ScrollView 
+        horizontal 
         showsHorizontalScrollIndicator={false}
         style={styles.categoryScroll}
         contentContainerStyle={styles.categoryContainer}
-        keyboardShouldPersistTaps="handled"
       >
         {categories.map(category => (
           <TouchableOpacity
@@ -79,7 +75,6 @@ export default function FoodsScreen() {
               selectedCategory === category.key && styles.categoryChipActive
             ]}
             onPress={() => setSelectedCategory(category.key)}
-            testID={`category-chip-${String(category.key)}`}
           >
             <Text style={[
               styles.categoryText,
@@ -91,19 +86,14 @@ export default function FoodsScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView
+      <ScrollView 
         showsVerticalScrollIndicator={false}
         style={styles.foodScrollView}
-        contentContainerStyle={[
-          styles.foodScrollViewContent,
-          { paddingBottom: Math.max(insets.bottom, 12) + 84 }
-        ]}
-        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.foodGrid}>
           {filteredFoods.map(food => {
             const safetyLevel = getSafetyLevel(food.nutrients);
-            const safetyColor =
+            const safetyColor = 
               safetyLevel === 'safe' ? colors.success :
               safetyLevel === 'caution' ? colors.warning :
               colors.danger;
@@ -119,8 +109,8 @@ export default function FoodsScreen() {
                 testID={`food-card-${food.id}`}
               >
                 <View style={[styles.safetyIndicator, { backgroundColor: safetyColor }]} />
-                <Image
-                  source={{ uri: food.image }}
+                <Image 
+                  source={{ uri: food.image }} 
                   style={styles.foodImage}
                 />
                 <Text style={styles.foodName}>
@@ -134,7 +124,7 @@ export default function FoodsScreen() {
           })}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -145,17 +135,17 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.white,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold' as const,
     color: colors.text,
-    marginBottom: 12,
+    marginBottom: 15,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -175,18 +165,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    maxHeight: 60,
   },
   categoryContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     alignItems: 'center',
   },
   categoryChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     backgroundColor: colors.background,
-    marginRight: 8,
+    marginRight: 10,
   },
   categoryChipActive: {
     backgroundColor: colors.primary,
@@ -202,20 +193,16 @@ const styles = StyleSheet.create({
   foodScrollView: {
     flex: 1,
   },
-  foodScrollViewContent: {
-    paddingBottom: 96,
-  },
   foodGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 12,
-    paddingTop: 8,
+    padding: 15,
   },
   foodCard: {
     width: '48%',
     backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 12,
+    padding: 12,
     margin: '1%',
     alignItems: 'center',
     elevation: 2,
@@ -234,21 +221,20 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   foodImage: {
-    width: 70,
-    height: 70,
+    width: 80,
+    height: 80,
     borderRadius: 8,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   foodName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600' as const,
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 2,
-    lineHeight: 16,
+    marginBottom: 4,
   },
   foodPortion: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textSecondary,
   },
 });
