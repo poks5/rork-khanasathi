@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   Image,
 } from "react-native";
 import { Search } from "lucide-react-native";
@@ -46,7 +45,7 @@ export default function FoodsScreen() {
   }, [searchQuery, selectedCategory]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container} testID="foods-screen">
       <View style={styles.header}>
         <Text style={styles.title}>{t('foods.title')}</Text>
         <View style={styles.searchContainer}>
@@ -57,15 +56,17 @@ export default function FoodsScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor={colors.textSecondary}
+            testID="foods-search-input"
           />
         </View>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.categoryScroll}
         contentContainerStyle={styles.categoryContainer}
+        keyboardShouldPersistTaps="handled"
       >
         {categories.map(category => (
           <TouchableOpacity
@@ -75,6 +76,7 @@ export default function FoodsScreen() {
               selectedCategory === category.key && styles.categoryChipActive
             ]}
             onPress={() => setSelectedCategory(category.key)}
+            testID={`category-chip-${String(category.key)}`}
           >
             <Text style={[
               styles.categoryText,
@@ -86,14 +88,16 @@ export default function FoodsScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.foodScrollView}
+        contentContainerStyle={styles.foodScrollViewContent}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.foodGrid}>
           {filteredFoods.map(food => {
             const safetyLevel = getSafetyLevel(food.nutrients);
-            const safetyColor = 
+            const safetyColor =
               safetyLevel === 'safe' ? colors.success :
               safetyLevel === 'caution' ? colors.warning :
               colors.danger;
@@ -109,8 +113,8 @@ export default function FoodsScreen() {
                 testID={`food-card-${food.id}`}
               >
                 <View style={[styles.safetyIndicator, { backgroundColor: safetyColor }]} />
-                <Image 
-                  source={{ uri: food.image }} 
+                <Image
+                  source={{ uri: food.image }}
                   style={styles.foodImage}
                 />
                 <Text style={styles.foodName}>
@@ -124,7 +128,7 @@ export default function FoodsScreen() {
           })}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -191,6 +195,10 @@ const styles = StyleSheet.create({
   },
   foodScrollView: {
     flex: 1,
+  },
+  foodScrollViewContent: {
+    paddingBottom: 96,
+    flexGrow: 1,
   },
   foodGrid: {
     flexDirection: 'row',
