@@ -75,8 +75,11 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const todayIntake = useMemo((): NutrientIntake => {
     const today = new Date().toDateString();
     
+    // Create cache key that includes both date and foodLog length to invalidate when food is added/removed
+    const cacheKey = `${today}-${foodLog.length}`;
+    
     // Check cache first
-    if (todayIntakeCache.current?.date === today) {
+    if (todayIntakeCache.current?.date === cacheKey) {
       return todayIntakeCache.current.intake;
     }
     
@@ -115,8 +118,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       }
     );
     
-    // Cache the result
-    todayIntakeCache.current = { date: today, intake };
+    // Cache the result with the new cache key
+    todayIntakeCache.current = { date: cacheKey, intake };
     return intake;
   }, [foodLog]);
 
