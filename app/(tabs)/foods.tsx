@@ -86,7 +86,10 @@ export default function FoodsScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        style={styles.foodScrollView}
+      >
         <View style={styles.foodGrid}>
           {filteredFoods.map(food => {
             const safetyLevel = getSafetyLevel(food.nutrients);
@@ -134,7 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: 20,
     paddingTop: 15,
-    paddingBottom: 10,
+    paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -160,11 +163,12 @@ const styles = StyleSheet.create({
   },
   categoryScroll: {
     backgroundColor: colors.white,
-    maxHeight: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   categoryContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 15,
     gap: 10,
   },
   categoryChip: {
@@ -185,10 +189,13 @@ const styles = StyleSheet.create({
   categoryTextActive: {
     color: colors.white,
   },
+  foodScrollView: {
+    flex: 1,
+  },
   foodGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 10,
+    padding: 15,
   },
   foodCard: {
     width: '48%',
