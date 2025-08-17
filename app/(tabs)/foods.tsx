@@ -165,11 +165,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    maxHeight: 60,
   },
   categoryContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    gap: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
   },
   categoryChip: {
     paddingHorizontal: 16,
