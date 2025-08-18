@@ -222,7 +222,7 @@ export default function ProfileScreen() {
             <Shield size={18} color={colors.primary} />
             <Text style={styles.creditsTitle}>App Concept Developed by</Text>
           </View>
-          <Text style={styles.creditsText}>Dr. Anil Pokhrel, MD, DM{"\n"}Consultant Nephrologist</Text>
+          <Text style={styles.creditsText}>Dr. Anil Pokhrel, MD, DM{"\n"}Consultant Nephrologist{"\n\n"}Sajana Pokharel{"\n"}Dietician</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
