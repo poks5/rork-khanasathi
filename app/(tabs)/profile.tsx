@@ -9,8 +9,9 @@ import {
   SafeAreaView,
   Switch,
   Alert,
+  Linking,
 } from "react-native";
-import { User, Heart, Droplet, AlertCircle, Shield } from "lucide-react-native";
+import { User, Heart, Droplet, AlertCircle, Shield, Phone } from "lucide-react-native";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { useUserProfile } from "@/providers/UserProfileProvider";
 import { colors } from "@/constants/colors";
@@ -223,6 +224,23 @@ export default function ProfileScreen() {
             <Text style={styles.creditsTitle}>App Concept Developed by</Text>
           </View>
           <Text style={styles.creditsText}>Dr. Anil Pokhrel, MD, DM{"\n"}Consultant Nephrologist{"\n\n"}Sajana Pokharel{"\n"}Dietician</Text>
+          <View style={styles.contactRow} accessibilityLabel="Contact for app concept development" testID="app-concept-contact">
+            <Phone size={16} color={colors.primary} />
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const phone = "+9779840050269";
+                  const url = `tel:${phone}`;
+                  await Promise.resolve(Linking.openURL(url));
+                } catch (e) {
+                  console.log("Phone link error", e);
+                }
+              }}
+              style={styles.phoneButton}
+            >
+              <Text style={styles.contactText}>Contact: +977 9840050269</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -409,5 +427,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: colors.textSecondary,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+  },
+  phoneButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: colors.background,
+    borderRadius: 6,
+  },
+  contactText: {
+    fontSize: 13,
+    color: colors.text,
   },
 });
