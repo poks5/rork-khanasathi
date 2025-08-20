@@ -10,8 +10,10 @@ import {
   Switch,
   Alert,
   Linking,
+  Share,
+  Platform,
 } from "react-native";
-import { User, Heart, Droplet, AlertCircle, Shield, Phone } from "lucide-react-native";
+import { User, Heart, Droplet, AlertCircle, Shield, Phone, Share2 } from "lucide-react-native";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { useUserProfile } from "@/providers/UserProfileProvider";
 import { colors } from "@/constants/colors";
@@ -45,6 +47,44 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleShareApp = async () => {
+    try {
+      const shareContent = {
+        title: 'Khana Sathi - Kidney Diet Tracker',
+        message: Platform.select({
+          ios: 'Download Khana Sathi app to track your kidney-friendly diet and nutrition. Developed by Dr. Anil Pokhrel, MD, DM (Consultant Nephrologist) and Sajana Pokharel (Dietician). Get it now: https://expo.dev/accounts/poks/projects/khanasathi',
+          android: 'Download Khana Sathi app to track your kidney-friendly diet and nutrition. Developed by Dr. Anil Pokhrel, MD, DM (Consultant Nephrologist) and Sajana Pokharel (Dietician). Get it now: https://expo.dev/accounts/poks/projects/khanasathi',
+          default: 'Download Khana Sathi app to track your kidney-friendly diet and nutrition. Developed by Dr. Anil Pokhrel, MD, DM (Consultant Nephrologist) and Sajana Pokharel (Dietician). Get it now: https://expo.dev/accounts/poks/projects/khanasathi'
+        }),
+        url: 'https://expo.dev/accounts/poks/projects/khanasathi'
+      };
+
+      if (Platform.OS === 'web') {
+        // Web fallback - copy to clipboard and show alert
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(shareContent.message!);
+          Alert.alert('Link Copied', 'App download link has been copied to clipboard!');
+        } else {
+          Alert.alert('Share App', shareContent.message!);
+        }
+      } else {
+        // Native sharing
+        const result = await Share.share({
+          title: shareContent.title,
+          message: shareContent.message,
+          url: shareContent.url
+        });
+        
+        if (result.action === Share.sharedAction) {
+          console.log('App shared successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Error sharing app:', error);
+      Alert.alert('Error', 'Unable to share the app. Please try again.');
+    }
   };
 
   return (
@@ -186,6 +226,29 @@ export default function ProfileScreen() {
           <View style={styles.infoBox}>
             <AlertCircle size={16} color={colors.warning} />
             <Text style={styles.infoText}>{t('profile.limitsInfo')}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Share2 size={20} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Share App</Text>
+          </View>
+          
+          <View style={styles.shareContainer}>
+            <Text style={styles.shareDescription}>
+              Share Khana Sathi with your patients to help them track their kidney-friendly diet and nutrition.
+            </Text>
+            
+            <TouchableOpacity 
+              style={styles.shareButton} 
+              onPress={handleShareApp}
+              testID="share-app-button"
+              accessibilityLabel="Share Khana Sathi app"
+            >
+              <Share2 size={18} color={colors.white} />
+              <Text style={styles.shareButtonText}>Share App with Patients</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -443,5 +506,28 @@ const styles = StyleSheet.create({
   contactText: {
     fontSize: 13,
     color: colors.text,
+  },
+  shareContainer: {
+    gap: 15,
+  },
+  shareDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textSecondary,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  shareButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
 });
