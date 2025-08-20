@@ -49,6 +49,31 @@ export default function ProfileScreen() {
     );
   };
 
+  const copyToClipboardFallback = (text: string) => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') {
+      return false;
+    }
+    
+    try {
+      // Create a temporary textarea element
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return success;
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      return false;
+    }
+  };
+
   const handleShareApp = async () => {
     try {
       const shareContent = {
@@ -62,12 +87,43 @@ export default function ProfileScreen() {
       };
 
       if (Platform.OS === 'web') {
-        // Web fallback - copy to clipboard and show alert
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(shareContent.message!);
+        // Try modern Web Share API first
+        if (navigator.share && navigator.canShare && navigator.canShare({ text: shareContent.message })) {
+          try {
+            await navigator.share({
+              title: shareContent.title,
+              text: shareContent.message,
+              url: shareContent.url
+            });
+            return;
+          } catch (shareError) {
+            console.log('Web Share API failed, trying clipboard:', shareError);
+          }
+        }
+
+        // Try clipboard API with proper permission handling
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(shareContent.message!);
+            Alert.alert('Link Copied', 'App download link has been copied to clipboard!');
+            return;
+          } catch (clipboardError) {
+            console.log('Clipboard API failed, trying fallback:', clipboardError);
+          }
+        }
+
+        // Fallback to document.execCommand
+        if (copyToClipboardFallback(shareContent.message!)) {
           Alert.alert('Link Copied', 'App download link has been copied to clipboard!');
         } else {
-          Alert.alert('Share App', shareContent.message!);
+          // Final fallback - show the text in an alert
+          Alert.alert(
+            'Share Khana Sathi App',
+            shareContent.message + '\n\nPlease copy this link manually to share the app.',
+            [
+              { text: 'OK', style: 'default' }
+            ]
+          );
         }
       } else {
         // Native sharing
@@ -83,7 +139,11 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error('Error sharing app:', error);
-      Alert.alert('Error', 'Unable to share the app. Please try again.');
+      Alert.alert(
+        'Share App',
+        'Download Khana Sathi app to track your kidney-friendly diet and nutrition. Developed by Dr. Anil Pokhrel, MD, DM (Consultant Nephrologist) and Sajana Pokharel (Dietician). Get it now: https://expo.dev/accounts/poks/projects/khanasathi\n\nPlease copy this link manually to share the app.',
+        [{ text: 'OK', style: 'default' }]
+      );
     }
   };
 
