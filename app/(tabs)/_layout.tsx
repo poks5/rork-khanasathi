@@ -2,8 +2,11 @@ import { Tabs } from "expo-router";
 import { Home, Book, User, Calendar, Lightbulb } from "lucide-react-native";
 import React, { useCallback, useMemo } from "react";
 import { colors } from "@/constants/colors";
+import { useLanguage } from "@/providers/LanguageProvider";
 
 export default function TabLayout() {
+  const { t } = useLanguage();
+
   const screenOptions = useMemo(() => ({
     tabBarActiveTintColor: colors.primary,
     tabBarInactiveTintColor: colors.gray,
@@ -29,35 +32,35 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: renderHomeIcon,
         }}
       />
       <Tabs.Screen
         name="foods"
         options={{
-          title: 'Foods',
+          title: t('tabs.foods'),
           tabBarIcon: renderFoodsIcon,
         }}
       />
       <Tabs.Screen
         name="log"
         options={{
-          title: 'Log',
+          title: t('tabs.log'),
           tabBarIcon: renderLogIcon,
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
-          title: 'Insights',
+          title: t('insights.headerTitle'),
           tabBarIcon: renderInsightsIcon,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
           tabBarIcon: renderProfileIcon,
         }}
       />

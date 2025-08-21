@@ -33,7 +33,6 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     const newLang: Language = language === 'en' ? 'ne' : 'en';
     setLanguage(newLang);
     
-    // Use batched AsyncStorage operation
     asyncStorageBatch.add(async () => {
       await measureAsyncPerformance('saveLanguage', async () => {
         await AsyncStorage.setItem('language', newLang);
@@ -43,13 +42,17 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
 
   const t = useCallback((key: string): string => {
     const keys = key.split('.');
-    let value: any = translations[language];
 
-    for (const k of keys) {
-      value = value?.[k];
-    }
+    const resolve = (lang: Language) => {
+      let value: any = translations[lang as keyof typeof translations];
+      for (const k of keys) {
+        value = value?.[k];
+      }
+      return value as string | undefined;
+    };
 
-    return (value as string) || key;
+    const val = resolve(language) ?? resolve('en');
+    return val ?? key;
   }, [language]);
 
   const value = useMemo(() => ({
