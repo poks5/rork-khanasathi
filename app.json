@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.khanasathi-app"
+      "bundleIdentifier": "app.rork.khanasathi"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.khanasathi-app"
+      "package": "app.rork.khanasathi"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
