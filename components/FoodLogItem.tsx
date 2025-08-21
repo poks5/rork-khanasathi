@@ -9,7 +9,7 @@ interface FoodLogItemProps {
   onDelete: () => void;
 }
 
-export function FoodLogItem({ item, onDelete }: FoodLogItemProps) {
+function FoodLogItemComponent({ item, onDelete }: FoodLogItemProps) {
   const time = new Date(item.timestamp).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
@@ -34,12 +34,14 @@ export function FoodLogItem({ item, onDelete }: FoodLogItemProps) {
           </Text>
         </View>
       </View>
-      <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+      <TouchableOpacity onPress={onDelete} style={styles.deleteButton} testID={`delete-${item.id}`}>
         <Trash2 size={18} color={colors.danger} />
       </TouchableOpacity>
     </View>
   );
 }
+
+export const FoodLogItem = React.memo(FoodLogItemComponent);
 
 const styles = StyleSheet.create({
   container: {

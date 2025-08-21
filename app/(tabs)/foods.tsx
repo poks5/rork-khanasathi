@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useDeferredValue, memo } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,7 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   SafeAreaView,
-  Image,
+  Image as RNImage,
 } from "react-native";
 import { Search } from "lucide-react-native";
 import { useLanguage } from "@/providers/LanguageProvider";
@@ -16,13 +16,49 @@ import { foodDatabase } from "@/data/foodDatabase";
 import { FoodCategory } from "@/types/food";
 import { router } from "expo-router";
 import { getSafetyLevel } from "@/utils/safetyUtils";
+import { FlatList } from "react-native";
+import { Image } from "expo-image";
+import { optimizeImageUrl } from "@/constants/performance";
+
+type FoodItemProps = { id: string };
+
+const FoodGridItem = memo(function FoodGridItem({ id }: FoodItemProps) {
+  const { t, language } = useLanguage();
+  const food = useMemo(() => foodDatabase.find(f => f.id === id), [id]);
+  const onPress = useCallback(() => {
+    router.push({ pathname: 'food-details' as any, params: { foodId: id } });
+  }, [id]);
+  if (!food) return null;
+  const safetyLevel = getSafetyLevel(food.nutrients);
+  const safetyColor = safetyLevel === 'safe' ? colors.success : safetyLevel === 'caution' ? colors.warning : colors.danger;
+  const uri = optimizeImageUrl(food.image, 160, 70);
+  return (
+    <TouchableOpacity style={styles.foodCard} onPress={onPress} testID={`food-card-${food.id}`}>
+      <View style={[styles.safetyIndicator, { backgroundColor: safetyColor }]} />
+      <Image
+        source={{ uri }}
+        style={styles.foodImage}
+        contentFit="cover"
+        placeholder={RNImage.resolveAssetSource?.({ uri: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' } as any)}
+        transition={200}
+      />
+      <Text style={styles.foodName} numberOfLines={1}>
+        {language === 'en' ? food.nameEn : food.nameNe}
+      </Text>
+      <Text style={styles.foodPortion}>
+        {food.defaultPortion} {language === 'en' ? food.unitEn : food.unitNe}
+      </Text>
+    </TouchableOpacity>
+  );
+});
 
 export default function FoodsScreen() {
   const { t, language } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<FoodCategory | 'all'>('all');
+  const deferredSearch = useDeferredValue(searchQuery);
 
-  const categories: Array<{ key: FoodCategory | 'all'; label: string }> = [
+  const categories: Array<{ key: FoodCategory | 'all'; label: string }> = useMemo(() => ([
     { key: 'all', label: t('foods.categories.all') },
     { key: 'grains', label: t('foods.categories.grains') },
     { key: 'vegetables', label: t('foods.categories.vegetables') },
@@ -32,18 +68,20 @@ export default function FoodsScreen() {
     { key: 'beverages', label: t('foods.categories.beverages') },
     { key: 'snacks', label: t('foods.categories.snacks') },
     { key: 'traditional', label: t('foods.categories.traditional') },
-  ];
+  ]), [t]);
 
   const filteredFoods = useMemo(() => {
+    const term = deferredSearch.toLowerCase();
     return foodDatabase.filter(food => {
       const matchesCategory = selectedCategory === 'all' || food.category === selectedCategory;
-      const searchTerm = searchQuery.toLowerCase();
-      const matchesSearch = !searchQuery || 
-        food.nameEn.toLowerCase().includes(searchTerm) ||
-        food.nameNe.toLowerCase().includes(searchTerm);
+      const matchesSearch = !term || food.nameEn.toLowerCase().includes(term) || food.nameNe.toLowerCase().includes(term);
       return matchesCategory && matchesSearch;
-    });
-  }, [searchQuery, selectedCategory]);
+    }).map(f => f.id);
+  }, [deferredSearch, selectedCategory]);
+
+  const renderItem = useCallback(({ item }: { item: string }) => (
+    <FoodGridItem id={item} />
+  ), []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -86,44 +124,18 @@ export default function FoodsScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView 
+      <FlatList
+        data={filteredFoods}
+        keyExtractor={(id) => id}
+        numColumns={2}
+        renderItem={renderItem}
+        contentContainerStyle={styles.foodGrid}
         showsVerticalScrollIndicator={false}
-        style={styles.foodScrollView}
-      >
-        <View style={styles.foodGrid}>
-          {filteredFoods.map(food => {
-            const safetyLevel = getSafetyLevel(food.nutrients);
-            const safetyColor = 
-              safetyLevel === 'safe' ? colors.success :
-              safetyLevel === 'caution' ? colors.warning :
-              colors.danger;
-
-            return (
-              <TouchableOpacity
-                key={food.id}
-                style={styles.foodCard}
-                onPress={() => router.push({
-                  pathname: 'food-details' as any,
-                  params: { foodId: food.id }
-                })}
-                testID={`food-card-${food.id}`}
-              >
-                <View style={[styles.safetyIndicator, { backgroundColor: safetyColor }]} />
-                <Image 
-                  source={{ uri: food.image }} 
-                  style={styles.foodImage}
-                />
-                <Text style={styles.foodName}>
-                  {language === 'en' ? food.nameEn : food.nameNe}
-                </Text>
-                <Text style={styles.foodPortion}>
-                  {food.defaultPortion} {language === 'en' ? food.unitEn : food.unitNe}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </ScrollView>
+        initialNumToRender={8}
+        windowSize={7}
+        removeClippedSubviews
+        testID="foods-list"
+      />
     </SafeAreaView>
   );
 }
