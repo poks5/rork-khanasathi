@@ -4,8 +4,8 @@ import React, { useCallback, useMemo } from "react";
 import { colors } from "@/constants/colors";
 import { useLanguage } from "@/providers/LanguageProvider";
 
-export default function TabLayout() {
-  const { t } = useLanguage();
+function TabLayout() {
+  const { t, language } = useLanguage();
 
   const screenOptions = useMemo(() => ({
     tabBarActiveTintColor: colors.primary,
@@ -21,6 +21,14 @@ export default function TabLayout() {
     },
   }), []);
 
+  const titles = useMemo(() => ({
+    home: t('tabs.home'),
+    foods: t('tabs.foods'),
+    log: t('tabs.log'),
+    insights: t('insights.headerTitle'),
+    profile: t('tabs.profile'),
+  }), [language]);
+
   const renderHomeIcon = useCallback(({ color }: { color: string }) => <Home size={24} color={color} />, []);
   const renderFoodsIcon = useCallback(({ color }: { color: string }) => <Book size={24} color={color} />, []);
   const renderLogIcon = useCallback(({ color }: { color: string }) => <Calendar size={24} color={color} />, []);
@@ -28,29 +36,29 @@ export default function TabLayout() {
   const renderProfileIcon = useCallback(({ color }: { color: string }) => <User size={24} color={color} />, []);
 
   const homeOptions = useMemo(() => ({
-    title: t('tabs.home'),
+    title: titles.home,
     tabBarIcon: renderHomeIcon,
-  }), [t, renderHomeIcon]);
+  }), [titles.home, renderHomeIcon]);
 
   const foodsOptions = useMemo(() => ({
-    title: t('tabs.foods'),
+    title: titles.foods,
     tabBarIcon: renderFoodsIcon,
-  }), [t, renderFoodsIcon]);
+  }), [titles.foods, renderFoodsIcon]);
 
   const logOptions = useMemo(() => ({
-    title: t('tabs.log'),
+    title: titles.log,
     tabBarIcon: renderLogIcon,
-  }), [t, renderLogIcon]);
+  }), [titles.log, renderLogIcon]);
 
   const insightsOptions = useMemo(() => ({
-    title: t('insights.headerTitle'),
+    title: titles.insights,
     tabBarIcon: renderInsightsIcon,
-  }), [t, renderInsightsIcon]);
+  }), [titles.insights, renderInsightsIcon]);
 
   const profileOptions = useMemo(() => ({
-    title: t('tabs.profile'),
+    title: titles.profile,
     tabBarIcon: renderProfileIcon,
-  }), [t, renderProfileIcon]);
+  }), [titles.profile, renderProfileIcon]);
 
   return (
     <Tabs screenOptions={screenOptions}>
@@ -62,3 +70,5 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+export default React.memo(TabLayout);
