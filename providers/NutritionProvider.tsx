@@ -43,7 +43,43 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       
       if (storedLog) {
         const parsedLog = JSON.parse(storedLog);
-        setFoodLog(parsedLog);
+        const safeLog: FoodLogEntry[] = Array.isArray(parsedLog)
+          ? parsedLog
+              .filter((e: Partial<FoodLogEntry> | null) => {
+                const isValid = !!e && typeof e === 'object' && !!e.timestamp;
+                if (!isValid) {
+                  console.warn('Dropping invalid food log entry:', e);
+                }
+                return isValid;
+              })
+              .map((e: any) => {
+                const nutrients = e?.nutrients ?? {};
+                return {
+                  id: e?.id ?? String(Date.now() + Math.random()),
+                  foodId: e?.foodId ?? 'unknown',
+                  foodName: e?.foodName ?? 'Unknown',
+                  quantity: Number(e?.quantity ?? 1),
+                  unit: String(e?.unit ?? 'serving'),
+                  mealType: (e?.mealType ?? 'breakfast') as FoodLogEntry['mealType'],
+                  timestamp: String(e?.timestamp ?? new Date().toISOString()),
+                  nutrients: {
+                    calories: Number(nutrients?.calories ?? 0),
+                    protein: Number(nutrients?.protein ?? 0),
+                    carbohydrates: Number(nutrients?.carbohydrates ?? 0),
+                    fat: Number(nutrients?.fat ?? 0),
+                    fiber: Number(nutrients?.fiber ?? 0),
+                    potassium: Number(nutrients?.potassium ?? 0),
+                    phosphorus: Number(nutrients?.phosphorus ?? 0),
+                    sodium: Number(nutrients?.sodium ?? 0),
+                    calcium: Number(nutrients?.calcium ?? 0),
+                    fluid: Number(nutrients?.fluid ?? 0),
+                    iron: Number(nutrients?.iron ?? 0),
+                    zinc: Number(nutrients?.zinc ?? 0),
+                  },
+                } as FoodLogEntry;
+              })
+          : [];
+        setFoodLog(safeLog);
       }
       
       if (storedProfile) {
@@ -84,23 +120,29 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
     
     const todayEntries = foodLog.filter(
-      entry => new Date(entry.timestamp).toDateString() === today
+      entry => {
+        try {
+          return new Date(entry?.timestamp ?? 0).toDateString() === today;
+        } catch {
+          return false;
+        }
+      }
     );
 
     const intake = todayEntries.reduce(
       (acc, entry) => ({
-        calories: acc.calories + entry.nutrients.calories,
-        protein: acc.protein + entry.nutrients.protein,
-        carbohydrates: acc.carbohydrates + (entry.nutrients.carbohydrates || 0),
-        fat: acc.fat + (entry.nutrients.fat || 0),
-        fiber: acc.fiber + (entry.nutrients.fiber || 0),
-        potassium: acc.potassium + entry.nutrients.potassium,
-        phosphorus: acc.phosphorus + entry.nutrients.phosphorus,
-        sodium: acc.sodium + entry.nutrients.sodium,
-        calcium: acc.calcium + (entry.nutrients.calcium || 0),
-        fluid: acc.fluid + entry.nutrients.fluid,
-        iron: acc.iron + (entry.nutrients.iron || 0),
-        zinc: acc.zinc + (entry.nutrients.zinc || 0),
+        calories: acc.calories + (entry?.nutrients?.calories ?? 0),
+        protein: acc.protein + (entry?.nutrients?.protein ?? 0),
+        carbohydrates: acc.carbohydrates + (entry?.nutrients?.carbohydrates ?? 0),
+        fat: acc.fat + (entry?.nutrients?.fat ?? 0),
+        fiber: acc.fiber + (entry?.nutrients?.fiber ?? 0),
+        potassium: acc.potassium + (entry?.nutrients?.potassium ?? 0),
+        phosphorus: acc.phosphorus + (entry?.nutrients?.phosphorus ?? 0),
+        sodium: acc.sodium + (entry?.nutrients?.sodium ?? 0),
+        calcium: acc.calcium + (entry?.nutrients?.calcium ?? 0),
+        fluid: acc.fluid + (entry?.nutrients?.fluid ?? 0),
+        iron: acc.iron + (entry?.nutrients?.iron ?? 0),
+        zinc: acc.zinc + (entry?.nutrients?.zinc ?? 0),
       }),
       {
         calories: 0,
@@ -128,6 +170,20 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       ...entry,
       id: Date.now().toString(),
       timestamp: new Date().toISOString(),
+      nutrients: {
+        calories: Number(entry.nutrients?.calories ?? 0),
+        protein: Number(entry.nutrients?.protein ?? 0),
+        carbohydrates: Number(entry.nutrients?.carbohydrates ?? 0),
+        fat: Number(entry.nutrients?.fat ?? 0),
+        fiber: Number(entry.nutrients?.fiber ?? 0),
+        potassium: Number(entry.nutrients?.potassium ?? 0),
+        phosphorus: Number(entry.nutrients?.phosphorus ?? 0),
+        sodium: Number(entry.nutrients?.sodium ?? 0),
+        calcium: Number(entry.nutrients?.calcium ?? 0),
+        fluid: Number(entry.nutrients?.fluid ?? 0),
+        iron: Number(entry.nutrients?.iron ?? 0),
+        zinc: Number(entry.nutrients?.zinc ?? 0),
+      },
     };
     const updatedLog = [...foodLog, newEntry];
     setFoodLog(updatedLog);
