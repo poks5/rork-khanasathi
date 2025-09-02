@@ -27,7 +27,7 @@ function TabLayout() {
     log: t('tabs.log'),
     insights: t('insights.headerTitle'),
     profile: t('tabs.profile'),
-  }), [language]);
+  }), [t]);
 
   const renderHomeIcon = useCallback(({ color }: { color: string }) => <Home size={24} color={color} />, []);
   const renderFoodsIcon = useCallback(({ color }: { color: string }) => <Book size={24} color={color} />, []);
