@@ -22,11 +22,10 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const todayIntakeCache = useRef<{ date: string; intake: NutrientIntake } | null>(null);
   const recommendationsCache = useRef<{ key: string; recommendations: NutritionRecommendation[] } | null>(null);
   
-  // Get insights recommendations if available - always call hook at top level
   const insights = useInsights();
   
   const insightRecommendations = useMemo(() => {
-    if (!insights) return [];
+    if (!insights || !insights.convertToNutritionRecommendations) return [];
     try {
       return insights.convertToNutritionRecommendations();
     } catch {
