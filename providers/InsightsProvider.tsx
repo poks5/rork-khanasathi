@@ -425,42 +425,52 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
       isBookmarked: false,
     };
 
-    const updatedRecommendations = [newRecommendation, ...recommendations];
-    setRecommendations(updatedRecommendations);
-    saveRecommendations(updatedRecommendations);
+    setRecommendations(prev => {
+      const updatedRecommendations = [newRecommendation, ...prev];
+      saveRecommendations(updatedRecommendations);
+      return updatedRecommendations;
+    });
     
     console.log('Added new insight recommendation:', newRecommendation.title);
-  }, [recommendations]);
+  }, []);
 
   const markAsRead = useCallback((id: string) => {
-    const updated = recommendations.map(rec => 
-      rec.id === id ? { ...rec, isRead: true } : rec
-    );
-    setRecommendations(updated);
-    saveRecommendations(updated);
-  }, [recommendations]);
+    setRecommendations(prev => {
+      const updated = prev.map(rec => 
+        rec.id === id ? { ...rec, isRead: true } : rec
+      );
+      saveRecommendations(updated);
+      return updated;
+    });
+  }, []);
 
   const toggleBookmark = useCallback((id: string) => {
-    const updated = recommendations.map(rec => 
-      rec.id === id ? { ...rec, isBookmarked: !rec.isBookmarked } : rec
-    );
-    setRecommendations(updated);
-    saveRecommendations(updated);
-  }, [recommendations]);
+    setRecommendations(prev => {
+      const updated = prev.map(rec => 
+        rec.id === id ? { ...rec, isBookmarked: !rec.isBookmarked } : rec
+      );
+      saveRecommendations(updated);
+      return updated;
+    });
+  }, []);
 
   const addUserNote = useCallback((id: string, note: string) => {
-    const updated = recommendations.map(rec => 
-      rec.id === id ? { ...rec, userNotes: note } : rec
-    );
-    setRecommendations(updated);
-    saveRecommendations(updated);
-  }, [recommendations]);
+    setRecommendations(prev => {
+      const updated = prev.map(rec => 
+        rec.id === id ? { ...rec, userNotes: note } : rec
+      );
+      saveRecommendations(updated);
+      return updated;
+    });
+  }, []);
 
   const deleteRecommendation = useCallback((id: string) => {
-    const updated = recommendations.filter(rec => rec.id !== id);
-    setRecommendations(updated);
-    saveRecommendations(updated);
-  }, [recommendations]);
+    setRecommendations(prev => {
+      const updated = prev.filter(rec => rec.id !== id);
+      saveRecommendations(updated);
+      return updated;
+    });
+  }, []);
 
   // Convert insight recommendations to nutrition recommendations for integration
   const convertToNutritionRecommendations = useCallback((): NutritionRecommendation[] => {
@@ -573,10 +583,12 @@ export const [InsightsProvider, useInsights] = createContextHook(() => {
   // Function to manually add predefined insights (for the button)
   const addPredefinedInsights = useCallback(() => {
     const newInsights = getPredefinedRecommendations();
-    const updatedRecommendations = [...newInsights, ...recommendations];
-    setRecommendations(updatedRecommendations);
-    saveRecommendations(updatedRecommendations);
-  }, [recommendations, getPredefinedRecommendations]);
+    setRecommendations(prev => {
+      const updatedRecommendations = [...newInsights, ...prev];
+      saveRecommendations(updatedRecommendations);
+      return updatedRecommendations;
+    });
+  }, [getPredefinedRecommendations]);
 
   return useMemo(() => ({
     recommendations,

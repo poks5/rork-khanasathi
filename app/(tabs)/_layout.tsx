@@ -5,7 +5,7 @@ import { colors } from "@/constants/colors";
 import { useLanguage } from "@/providers/LanguageProvider";
 
 function TabLayout() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   const screenOptions = useMemo(() => ({
     tabBarActiveTintColor: colors.primary,
